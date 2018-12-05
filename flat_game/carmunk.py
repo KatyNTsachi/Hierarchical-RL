@@ -24,7 +24,7 @@ screen.set_alpha(None)
 # Showing sensors and redrawing slows things down.
 show_sensors = True
 draw_screen = True
-
+min_ball_radius=100
 
 class GameState:
     def __init__(self):
@@ -57,7 +57,7 @@ class GameState:
                 (1, 1), (width, 1), 1),
             pymunk.Segment(
                 self.space.static_body,
-                (height/2, 20), (height/2, width-20), 1)
+                (height/2, 2*min_ball_radius), (height/2, width-2*min_ball_radius), 1)
         ]
         for s in static:
             s.friction = 1.
