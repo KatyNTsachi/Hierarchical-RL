@@ -69,7 +69,7 @@ class GameState:
         # Create some obstacles, semi-randomly.
         # We'll create three and they'll move around to prevent over-fitting.
         self.obstacles = []
-        self.obstacles.append(self.create_obstacle(200, 350, 100))
+        self.obstacles.append(self.create_obstacle(600, 350, 100))
         self.obstacles.append(self.create_obstacle(700, 200, 125))
         self.obstacles.append(self.create_obstacle(600, 600, 35))
 
