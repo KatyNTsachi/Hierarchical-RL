@@ -72,7 +72,11 @@ class GameState:
         self.obstacles.append(self.create_obstacle(600, 350, 100))
         self.obstacles.append(self.create_obstacle(700, 200, 125))
         self.obstacles.append(self.create_obstacle(600, 600, 35))
-
+        
+        
+        #prizes
+        self.prizes = []
+        
         # Create a cat.
         self.create_cat()
 
@@ -107,13 +111,32 @@ class GameState:
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
         self.car_body.apply_impulse(driving_direction)
         self.space.add(self.car_body, self.car_shape)
-
+    
+    def put_prize(self):
+        x=random.randint(0, width-1)
+        y=random.randint(0, height-1)
+        self.prizes.append(self.create_obstacle(x, y, 30))
+        
+        
+    def put_prize(self):
+        return []
+        
     def frame_step(self, action):
+        
+    
         if action == 0:  # Turn left.
             self.car_body.angle -= .2
         elif action == 1:  # Turn right.
             self.car_body.angle += .2
 
+        # add prize.
+        if self.num_steps % 50 == 0:
+            self.put_prize()    
+            
+        # remove prize.
+        if self.num_steps % 5 == 0:
+            self.remove_prize()    
+            
         # Move obstacles.
         if self.num_steps % 100 == 0:
             self.move_obstacles()
@@ -132,7 +155,7 @@ class GameState:
         if draw_screen:
             pygame.display.flip()
         clock.tick()
-
+        
         # Get the current location and the readings there.
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
@@ -223,7 +246,7 @@ class GameState:
         # Used to count the distance.
         i = 0
 
-        # Look at each point and see if we've hit something.
+        # Look at each  and see if we've hit something.
         for point in arm:
             i += 1
 
