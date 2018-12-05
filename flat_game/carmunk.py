@@ -24,7 +24,7 @@ screen.set_alpha(None)
 # Showing sensors and redrawing slows things down.
 show_sensors = True
 draw_screen = True
-min_ball_radius=100
+min_ball_radius=50
 
 class GameState:
     def __init__(self):
@@ -278,5 +278,5 @@ class GameState:
 if __name__ == "__main__":
     game_state = GameState()
 while True:
-    time.sleep(1)
+    #time.sleep(1)
     game_state.frame_step((random.randint(0, 2)))
