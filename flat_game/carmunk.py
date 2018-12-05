@@ -128,8 +128,7 @@ class GameState:
         
         
     def remove_prize(self):
-        for item in self.prizes
-            item.remove()
+         self.prizes.remove()
         
     def frame_step(self, action):
         
