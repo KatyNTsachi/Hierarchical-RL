@@ -57,7 +57,7 @@ class GameState:
                 (1, 1), (width, 1), 1),
             pymunk.Segment(
                 self.space.static_body,
-                (width/2, 2*min_ball_radius), (wifth/2, height-2*min_ball_radius), 1)
+                (width/2, 2*min_ball_radius), (width/2, height-2*min_ball_radius), 1)
         ]
         for s in static:
             s.friction = 1.
