@@ -118,7 +118,7 @@ class GameState:
         self.prizes.append(self.create_obstacle(x, y, 30))
         
         
-    def put_prize(self):
+    def remove_prize(self):
         return []
         
     def frame_step(self, action):
