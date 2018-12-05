@@ -88,6 +88,15 @@ class GameState:
         c_shape.color = THECOLORS["blue"]
         self.space.add(c_body, c_shape)
         return c_body
+    
+    def create_prize(self, x, y, r):
+        c_body = pymunk.Body(pymunk.inf, pymunk.inf)
+        c_shape = pymunk.Circle(c_body, r)
+        c_shape.elasticity = 1.0
+        c_body.position = x, y
+        c_shape.color = THECOLORS["pink"]
+        self.space.add(c_body, c_shape)
+        return c_body
 
     def create_cat(self):
         inertia = pymunk.moment_for_circle(1, 0, 14, (0, 0))
@@ -115,7 +124,7 @@ class GameState:
     def put_prize(self):
         x=random.randint(0, width-1)
         y=random.randint(0, height-1)
-        self.prizes.append(self.create_obstacle(x, y, 30))
+        self.prizes.append(self.create_prize(x, y, 30))
         
         
     def remove_prize(self):
