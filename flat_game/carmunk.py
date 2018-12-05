@@ -126,7 +126,7 @@ class GameState:
         y=random.randint(0, height-1)
         self.prizes.append(self.create_prize(x, y, 30))
         
-        
+    ############################problem is here
     def remove_prize(self):
           while len(self.prizes)>0:
                 self.prizes.remove()
