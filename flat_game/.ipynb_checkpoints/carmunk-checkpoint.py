@@ -1,17 +1,21 @@
+THERE_IS_NOT_SCREEN_FLAG=True
+if THERE_IS_NOT_SCREEN_FLAG==True:
+    import os
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
+
 import random
 import math
 import numpy as np
-
 import pygame
 from pygame.color import THECOLORS
 
 import pymunk
 from pymunk.vec2d import Vec2d
-from pymunk.pygame_util import draw
+from pymunk.pygame_util import DrawOptions as draw
 import time
 
-
-# PyGame init
+    
+    # PyGame init
 width = 1000
 height = 700
 pygame.init()
@@ -25,19 +29,23 @@ screen.set_alpha(None)
 show_sensors = True
 draw_screen = True
 min_ball_radius=50
+OBSTACLE_MASS=1000000
+OBSTACLE_MOMENT=1000000
+PRIZE_MASS=1000000
+PRIZE_MOMENT=1000000
 
 class GameState:
     def __init__(self):
         # Global-ish.
         self.crashed = False
-
+        
         # Physics stuff.
         self.space = pymunk.Space()
         self.space.gravity = pymunk.Vec2d(0., 0.)
-
+        
         # Create the car.
         self.create_car(100, 100, 0.5)
-
+        
         # Record steps.
         self.num_steps = 0
 
@@ -65,7 +73,7 @@ class GameState:
             s.collision_type = 1
             s.color = THECOLORS['red']
         self.space.add(static)
-
+        
         # Create some obstacles, semi-randomly.
         # We'll create three and they'll move around to prevent over-fitting.
         self.obstacles = []
@@ -73,15 +81,14 @@ class GameState:
         self.obstacles.append(self.create_obstacle(700, 200, 125))
         self.obstacles.append(self.create_obstacle(600, 600, 35))
         
-        
         #prizes
         self.prizes = []
         
         # Create a cat.
         self.create_cat()
-
+        
     def create_obstacle(self, x, y, r):
-        c_body = pymunk.Body(pymunk.inf, pymunk.inf)
+        c_body = pymunk.Body(OBSTACLE_MASS, OBSTACLE_MOMENT)
         c_shape = pymunk.Circle(c_body, r)
         c_shape.elasticity = 1.0
         c_body.position = x, y
@@ -90,7 +97,7 @@ class GameState:
         return c_body
     
     def create_prize(self, x, y, r):
-        c_body = pymunk.Body(pymunk.inf, pymunk.inf)
+        c_body = pymunk.Body(PRIZE_MASS,PRIZE_MOMENT)
         c_shape = pymunk.Circle(c_body, r)
         c_shape.elasticity = 1.0
         c_body.position = x, y
@@ -118,22 +125,22 @@ class GameState:
         self.car_shape.elasticity = 1.0
         self.car_body.angle = r
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
-        self.car_body.apply_impulse(driving_direction)
+        self.car_body.apply_impulse_at_world_point (driving_direction)
         self.space.add(self.car_body, self.car_shape)
     
     def put_prize(self):
         x=random.randint(0, width-1)
         y=random.randint(0, height-1)
         self.prizes.append(self.create_prize(x, y, 30))
-        
-    ############################problem is here
+    '''
     def remove_prize(self):
-          while len(self.prizes)>0:
-                self.prizes.remove()
-        
+        while len(self.prizes)>0:
+            self.space.remove(self.prizes.pop());
+    '''
+    
     def frame_step(self, action):
         
-    
+        
         if action == 0:  # Turn left.
             self.car_body.angle -= .2
         elif action == 1:  # Turn right.
@@ -144,9 +151,11 @@ class GameState:
             self.put_prize()    
             
         # remove prize.
-        if self.num_steps % 5 == 0:
-            self.remove_prize()    
-            
+        
+        #if self.num_steps % 5 == 0:
+        #    self.remove_prize()    
+        
+        
         # Move obstacles.
         if self.num_steps % 100 == 0:
             self.move_obstacles()
@@ -154,13 +163,15 @@ class GameState:
         # Move cat.
         if self.num_steps % 5 == 0:
             self.move_cat()
-
+        
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
         self.car_body.velocity = 100 * driving_direction
-
+        
+        
         # Update the screen and stuff.
         screen.fill(THECOLORS["black"])
-        draw(screen, self.space)
+        draw(self.space)
+        
         self.space.step(1./10)
         if draw_screen:
             pygame.display.flip()
@@ -171,7 +182,7 @@ class GameState:
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
         normalized_readings = [(x-20.0)/20.0 for x in readings] 
         state = np.array([normalized_readings])
-
+        
         # Set the reward.
         # Car crashed when any reading == 1
         if self.car_is_crashed(readings):
@@ -182,7 +193,9 @@ class GameState:
             # Higher readings are better, so return the sum.
             reward = -5 + int(self.sum_readings(readings) / 10)
         self.num_steps += 1
-
+        
+        reward=0 
+        state=0
         return reward, state
 
     def move_obstacles(self):
@@ -215,7 +228,7 @@ class GameState:
             for i in range(10):
                 self.car_body.angle += .2  # Turn a little.
                 screen.fill(THECOLORS["grey7"])  # Red is scary!
-                draw(screen, self.space)
+                draw(self.space)
                 self.space.step(1./10)
                 if draw_screen:
                     pygame.display.flip()
@@ -307,9 +320,10 @@ class GameState:
             return 0
         else:
             return 1
-
+        
 if __name__ == "__main__":
     game_state = GameState()
+    
 while True:
     #time.sleep(1)
-    game_state.frame_step((random.randint(0, 2)))
+    game_state.frame_step((random.randint(0, 2) ))
