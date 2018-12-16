@@ -6,24 +6,20 @@ if THERE_IS_NOT_SCREEN_FLAG==True:
 import random
 import math
 import numpy as np
-import pygame
-from pygame.color import THECOLORS
 
 import pymunk
+import pyglet
 from pymunk.vec2d import Vec2d
 from pymunk.pygame_util import DrawOptions as draw
 import time
 
     
-    # PyGame init
+# pyglet init
 width = 1000
 height = 700
-pygame.init()
-screen = pygame.display.set_mode((width, height))
-clock = pygame.time.Clock()
+pyglet.clock.schedule_interval(update,1.0/60)
+pyglet.app.run()
 
-# Turn off alpha since we don't use it.
-screen.set_alpha(None)
 
 # Showing sensors and redrawing slows things down.
 show_sensors = True
@@ -172,6 +168,7 @@ class GameState:
         screen.fill(THECOLORS["black"])
         draw(self.space)
         
+        '''
         self.space.step(1./10)
         if draw_screen:
             pygame.display.flip()
@@ -193,7 +190,7 @@ class GameState:
             # Higher readings are better, so return the sum.
             reward = -5 + int(self.sum_readings(readings) / 10)
         self.num_steps += 1
-        
+        '''
         reward=0 
         state=0
         return reward, state
@@ -228,7 +225,7 @@ class GameState:
             for i in range(10):
                 self.car_body.angle += .2  # Turn a little.
                 screen.fill(THECOLORS["grey7"])  # Red is scary!
-                draw(self.space)
+                self._draw_objects()
                 self.space.step(1./10)
                 if draw_screen:
                     pygame.display.flip()
