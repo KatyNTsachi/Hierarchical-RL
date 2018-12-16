@@ -105,7 +105,7 @@ class GameState:
         c_body.position = x, y
         c_shape.color = THECOLORS["pink"]
         self.space.add(c_body, c_shape)
-        return c_body
+        return c_body, c_shape
 
     def create_cat(self):
         inertia = pymunk.moment_for_circle(1, 0, 14, (0, 0))
@@ -133,12 +133,15 @@ class GameState:
     def put_prize(self):
         x=random.randint(0, width-1)
         y=random.randint(0, height-1)
-        self.prizes.append(self.create_prize(x, y, 30))
-    '''
+        tmp_c,tmp_s=self.create_prize(x, y, 30)
+        self.prizes.append((tmp_c,tmp_s))
+    
     def remove_prize(self):
         while len(self.prizes)>0:
-            self.space.remove(self.prizes.pop());
-    '''
+            tmp_prize=self.prizes.pop()
+            #print("tmp_prize.type:",type(tmp_prize))
+            self.space.remove(tmp_prize);
+   
     
     def frame_step(self, action):
         
@@ -148,16 +151,17 @@ class GameState:
         elif action == 1:  # Turn right.
             self.car_body.angle += .2
 
-        # add prize.
-        if self.num_steps % 50 == 0:
-            self.put_prize()    
+           
             
         # remove prize.
         
-        #if self.num_steps % 5 == 0:
-        #    self.remove_prize()    
+        if self.num_steps % 5 == 0:
+            self.remove_prize()    
         
-        
+        # add prize.
+        if self.num_steps % 5 == 0:
+            self.put_prize() 
+            
         # Move obstacles.
         if self.num_steps % 100 == 0:
             self.move_obstacles()
@@ -328,5 +332,5 @@ if __name__ == "__main__":
     game_state = GameState()
     
 while True:
-    time.sleep(0.1)
+    #time.sleep(0.1)
     game_state.frame_step((random.randint(0, 2) ))
