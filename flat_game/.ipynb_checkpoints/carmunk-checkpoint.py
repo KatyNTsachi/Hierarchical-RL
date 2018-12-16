@@ -13,10 +13,14 @@ from pymunk.vec2d import Vec2d
 from pymunk.pygame_util import DrawOptions as draw
 import time
 
-    
+
 # pyglet init
 width = 1000
 height = 700
+
+window=pyglet.window.window(width,high,"Game",resizable=False)
+
+
 pyglet.clock.schedule_interval(update,1.0/60)
 pyglet.app.run()
 
