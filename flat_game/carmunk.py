@@ -1,4 +1,4 @@
-THERE_IS_NOT_SCREEN_FLAG=True
+THERE_IS_NOT_SCREEN_FLAG=False
 if THERE_IS_NOT_SCREEN_FLAG==True:
     import os
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
@@ -175,7 +175,7 @@ class GameState:
         self.space.debug_draw(self.options)
         
         
-        #self.space.step(1./10)
+        self.space.step(1./10)
         if draw_screen:
             pygame.display.flip()
         clock.tick()
@@ -232,7 +232,7 @@ class GameState:
                 self.car_body.angle += .2  # Turn a little.
                 self.screen.fill(THECOLORS["grey7"])  # Red is scary!
                 self.space.debug_draw(self.options)
-                #self.space.step(1./10)
+                self.space.step(1./10)
                 if draw_screen:
                     pygame.display.flip()
                 clock.tick()
@@ -328,5 +328,5 @@ if __name__ == "__main__":
     game_state = GameState()
     
 while True:
-    time.sleep(1)
+    time.sleep(0.1)
     game_state.frame_step((random.randint(0, 2) ))
