@@ -141,8 +141,8 @@ class GameState:
     '''
     
     def frame_step(self, action):
-        
-        
+        clock.tick()
+        '''
         if action == 0:  # Turn left.
             self.car_body.angle -= .2
         elif action == 1:  # Turn right.
@@ -176,10 +176,14 @@ class GameState:
         
         
         self.space.step(1./10)
+    
+        clock.tick()
+    
         if draw_screen:
             pygame.display.flip()
-        clock.tick()
-        '''
+        
+        
+        
         # Get the current location and the readings there.
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)

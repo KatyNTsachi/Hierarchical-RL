@@ -7,22 +7,20 @@ import random
 import math
 import numpy as np
 
+import pygame
 import pymunk
-import pyglet
+from pymunk.pygame_util import DrawOptions
 from pymunk.vec2d import Vec2d
-from pymunk.pygame_util import DrawOptions as draw
 import time
 
-
-# pyglet init
 width = 1000
 height = 700
+from pygame.color import THECOLORS
 
-window=pyglet.window.window(width,high,"Game",resizable=False)
 
+pygame.init()
 
-pyglet.clock.schedule_interval(update,1.0/60)
-pyglet.app.run()
+clock = pygame.time.Clock()
 
 
 # Showing sensors and redrawing slows things down.
@@ -42,6 +40,9 @@ class GameState:
         # Physics stuff.
         self.space = pymunk.Space()
         self.space.gravity = pymunk.Vec2d(0., 0.)
+        
+        self.screen =  pygame.display.set_mode((width, height))
+        self.options = DrawOptions(self.screen)
         
         # Create the car.
         self.create_car(100, 100, 0.5)
@@ -86,6 +87,7 @@ class GameState:
         
         # Create a cat.
         self.create_cat()
+        self.space.debug_draw(self.options)
         
     def create_obstacle(self, x, y, r):
         c_body = pymunk.Body(OBSTACLE_MASS, OBSTACLE_MOMENT)
@@ -139,8 +141,8 @@ class GameState:
     '''
     
     def frame_step(self, action):
-        
-        
+        clock.tick()
+        '''
         if action == 0:  # Turn left.
             self.car_body.angle -= .2
         elif action == 1:  # Turn right.
@@ -169,14 +171,18 @@ class GameState:
         
         
         # Update the screen and stuff.
-        screen.fill(THECOLORS["black"])
-        draw(self.space)
+        self.screen.fill(THECOLORS["black"])
+        self.space.debug_draw(self.options)
         
-        '''
+        
         self.space.step(1./10)
+    
+        clock.tick()
+    
         if draw_screen:
             pygame.display.flip()
-        clock.tick()
+        
+        
         
         # Get the current location and the readings there.
         x, y = self.car_body.position
@@ -228,7 +234,7 @@ class GameState:
             self.crashed = False
             for i in range(10):
                 self.car_body.angle += .2  # Turn a little.
-                screen.fill(THECOLORS["grey7"])  # Red is scary!
+                self.screen.fill(THECOLORS["grey7"])  # Red is scary!
                 self._draw_objects()
                 self.space.step(1./10)
                 if draw_screen:
@@ -285,12 +291,12 @@ class GameState:
                     or rotated_p[0] >= width or rotated_p[1] >= height:
                 return i  # Sensor is off the screen.
             else:
-                obs = screen.get_at(rotated_p)
+                obs = self.screen.get_at(rotated_p)
                 if self.get_track_or_not(obs) != 0:
                     return i
 
             if show_sensors:
-                pygame.draw.circle(screen, (255, 255, 255), (rotated_p), 2)
+                pygame.draw.circle(self.screen, (255, 255, 255), (rotated_p), 2)
 
         # Return the distance for the arm.
         return i
