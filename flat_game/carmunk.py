@@ -141,8 +141,8 @@ class GameState:
     '''
     
     def frame_step(self, action):
-        clock.tick()
-        '''
+        
+        
         if action == 0:  # Turn left.
             self.car_body.angle -= .2
         elif action == 1:  # Turn right.
@@ -175,14 +175,10 @@ class GameState:
         self.space.debug_draw(self.options)
         
         
-        self.space.step(1./10)
-    
-        clock.tick()
-    
+        #self.space.step(1./10)
         if draw_screen:
             pygame.display.flip()
-        
-        
+        clock.tick()
         
         # Get the current location and the readings there.
         x, y = self.car_body.position
@@ -200,7 +196,7 @@ class GameState:
             # Higher readings are better, so return the sum.
             reward = -5 + int(self.sum_readings(readings) / 10)
         self.num_steps += 1
-        '''
+        
         reward=0 
         state=0
         return reward, state
@@ -235,8 +231,8 @@ class GameState:
             for i in range(10):
                 self.car_body.angle += .2  # Turn a little.
                 self.screen.fill(THECOLORS["grey7"])  # Red is scary!
-                self._draw_objects()
-                self.space.step(1./10)
+                self.space.debug_draw(self.options)
+                #self.space.step(1./10)
                 if draw_screen:
                     pygame.display.flip()
                 clock.tick()
@@ -332,5 +328,5 @@ if __name__ == "__main__":
     game_state = GameState()
     
 while True:
-    #time.sleep(1)
+    time.sleep(1)
     game_state.frame_step((random.randint(0, 2) ))
