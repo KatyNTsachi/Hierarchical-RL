@@ -31,6 +31,7 @@ import math
 
 
 import gym
+import gym_cars
 import numpy as np
 import tensorflow as tf
 
@@ -41,12 +42,18 @@ CARTPOLE_MIN_VALS = np.array([-2.4, -5., -math.pi/12., -math.pi*2.])
 CARTPOLE_MAX_VALS = np.array([2.4, 5., math.pi/12., math.pi*2.])
 ACROBOT_MIN_VALS = np.array([-1., -1., -1., -1., -5., -5.])
 ACROBOT_MAX_VALS = np.array([1., 1., 1., 1., 5., 5.])
+CARS_MIN_VALS = np.array([-50])
+CARS_MAX_VALS = np.array([100])
+
 gin.constant('gym_lib.CARTPOLE_OBSERVATION_SHAPE', (4, 1))
 gin.constant('gym_lib.CARTPOLE_OBSERVATION_DTYPE', tf.float32)
 gin.constant('gym_lib.CARTPOLE_STACK_SIZE', 1)
 gin.constant('gym_lib.ACROBOT_OBSERVATION_SHAPE', (6, 1))
 gin.constant('gym_lib.ACROBOT_OBSERVATION_DTYPE', tf.float32)
 gin.constant('gym_lib.ACROBOT_STACK_SIZE', 1)
+gin.constant('gym_lib.CARS_OBSERVATION_SHAPE', (700, 1000, 3))
+gin.constant('gym_lib.CARS_OBSERVATION_DTYPE', tf.float32)
+gin.constant('gym_lib.CARS_STACK_SIZE', 1)
 
 slim = tf.contrib.slim
 
@@ -121,6 +128,25 @@ def cartpole_dqn_network(num_actions, network_type, state):
   """
   q_values = _basic_discrete_domain_network(
       CARTPOLE_MIN_VALS, CARTPOLE_MAX_VALS, num_actions, state)
+  return network_type(q_values)
+
+
+@gin.configurable
+def cars_dqn_network(num_actions, network_type, state):
+  """Builds the deep network used to compute the agent's Q-values.
+
+  It rescales the input features to a range that yields improved performance.
+
+  Args:
+    num_actions: int, number of actions.
+    network_type: namedtuple, collection of expected values to return.
+    state: `tf.Tensor`, contains the agent's current state.
+
+  Returns:
+    net: _network_type object containing the tensors output by the network.
+  """
+  q_values = _basic_discrete_domain_network(
+      CARS_MIN_VALS, CARS_MAX_VALS, num_actions, state)
   return network_type(q_values)
 
 
