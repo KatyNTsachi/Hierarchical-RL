@@ -1,6 +1,7 @@
 import os
 import cv2
 import time
+import numpy as np
 
 THERE_IS_NOT_SCREEN_FLAG=False
 if THERE_IS_NOT_SCREEN_FLAG==True:
@@ -577,6 +578,12 @@ class carsEnv(gym.Env):
 	#obs = cv2.resize( obs, None, fx=0.08, fy=0.08, interpolation = cv2.INTER_AREA )
 	return obs
 
+	
+    def getScreenGrayscale(self,obs):
+	
+	if np.shape(np.shape(obs))[0] == 2:
+	    return obs 
+	return cv2.cvtColor( obs, cv2.COLOR_BGR2GRAY )
 
     def _reset(self):
 	
@@ -594,11 +601,6 @@ class carsEnv(gym.Env):
         (reward, done) = self.frame_step(action)
         obs            = self.get_observation()
         info           = {}
-
-	plt.figure()
-	plt.imshow( obs )
-	plt.show()
-	print(np.shape(obs))
 
         return obs, reward, done, info
     
