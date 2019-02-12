@@ -30,6 +30,7 @@ import math
 
 import atari_py
 import gym
+import gym_cars
 from gym.spaces.box import Box
 import numpy as np
 import tensorflow as tf
@@ -99,7 +100,8 @@ def create_atari_environment(game_name=None, sticky_actions=True):
     An Atari 2600 environment with some standard preprocessing.
   """
   assert game_name is not None
-  game_version = 'v0' if sticky_actions else 'v4'
+  #game_version = 'v0' if sticky_actions else 'v4'
+  game_version = 'v0'
   full_game_name = '{}NoFrameskip-{}'.format(game_name, game_version)
   env = gym.make(full_game_name)
   # Strip out the TimeLimit wrapper from Gym, which caps us at 100k frames. We
