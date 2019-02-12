@@ -1,4 +1,7 @@
 import os
+import cv2
+import time
+
 THERE_IS_NOT_SCREEN_FLAG=False
 if THERE_IS_NOT_SCREEN_FLAG==True:
     os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -13,7 +16,7 @@ from pygame.color import THECOLORS
 import pymunk
 from pymunk.vec2d import Vec2d
 from pymunk.pygame_util import draw
-import time
+
 
 import sys
 import gym
@@ -99,7 +102,7 @@ class carsEnv(gym.Env):
 
     metadata = {"render.modes": ["human", "ansi"]}
 
-    def __init__(self, beam_size=32, graph=None, goal_reward=10.0):
+    def __init__(self):
         
         ############################################## dopamin initilization ##############################################
         self.screen_size       = 210
@@ -184,8 +187,9 @@ class carsEnv(gym.Env):
         self.obstacles.append( self.create_obstacle( WIDTH * 0.7 , HEIGHT * 0.2 , 50 ) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.35, HEIGHT * 0.35, 40 ) )
         
-        #prizes
+        #prizes + Create first prize
         self.prizes = []  
+        self.put_prize()
         
 	#collisions
 	#self.colision_from_up   = False
@@ -469,8 +473,6 @@ class carsEnv(gym.Env):
         
 	
 	if self.wall_collision:
-	    import time
-    	    time.sleep(10)
 	    self.wall_collision = False
 
 	if self.num_of_collected_prizes >= MAX_NUM_OF_COLLECTED_PRIZES or self.lives<1:
@@ -489,7 +491,6 @@ class carsEnv(gym.Env):
 
 	if self.dont_move == True:
 	    #print("we sropped the car")		
-	    #import time
 	    #time.sleep(5)
 	    self.car_body.velocity.x = 0
 	    self.car_body.velocity.y = 0
@@ -569,6 +570,12 @@ class carsEnv(gym.Env):
 	self.remove_prize()
 	self.put_prize()
 
+    def get_observation(self):
+	obs = pygame.surfarray.array3d(screen)
+	#shrink output
+	obs = cv2.cvtColor( obs, cv2.COLOR_BGR2GRAY )
+	obs = cv2.resize( obs, None, fx=0.08, fy=0.08, interpolation = cv2.INTER_AREA )
+	return obs
 
 
     def _reset(self):
@@ -577,18 +584,22 @@ class carsEnv(gym.Env):
 	self.lives                   = NUM_OF_LIVES
         self.num_steps               = 0
 	self.oneDeathReset()
-	obs = pygame.surfarray.array3d(screen)
-
-        return obs
+	obs = self.get_observation()
+        return obs	
         
         
         
     def _step(self, action):
         
         (reward, done) = self.frame_step(action)
-        obs            = pygame.surfarray.array3d(screen)
+        obs            = self.get_observation()
         info           = {}
-	
+
+	plt.figure()
+	plt.imshow( obs )
+	plt.show()
+	print(np.shape(obs))
+
         return obs, reward, done, info
     
 
@@ -597,9 +608,12 @@ class carsEnv(gym.Env):
         
         pass
 
-    
-   
-    
+
+#game = carsEnv()
+#while True:
+#    game._step(1)
+#    time.sleep(1)
+	
     
 
 
