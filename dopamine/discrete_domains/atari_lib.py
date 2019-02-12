@@ -30,7 +30,7 @@ import math
 
 import atari_py
 import gym
-import gym_cars
+#import gym_cars
 from gym.spaces.box import Box
 import numpy as np
 import tensorflow as tf
