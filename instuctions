@@ -1,0 +1,1 @@
+python -um dopamine.atari.train   --agent_name=dqn   --base_dir=~/hierarchy/Hierarchical-RL   --gin_files='dopamine/agents/dqn/configs/dqn.gin'
