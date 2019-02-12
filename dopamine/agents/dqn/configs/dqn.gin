@@ -26,12 +26,12 @@ tf.train.RMSPropOptimizer.centered = True
 
 atari_lib.create_atari_environment.game_name = 'cars'
 # Sticky actions with probability 0.25, as suggested by (Machado et al., 2017).
-atari_lib.create_atari_environment.sticky_actions = True
+atari_lib.create_atari_environment.sticky_actions = False
 create_agent.agent_name = 'dqn'
-Runner.num_iterations = 1000 #200
-Runner.training_steps =  2500 #250000  # agent steps
-Runner.evaluation_steps = 1250 #125000  # agent steps
+Runner.num_iterations = 10000 #200
+Runner.training_steps =  250000 #250000  # agent steps
+Runner.evaluation_steps = 125000 #125000  # agent steps
 Runner.max_steps_per_episode = 27000  # agent steps
 
-WrappedReplayBuffer.replay_capacity = 10000 #1000000
+WrappedReplayBuffer.replay_capacity = 1000000 #1000000
 WrappedReplayBuffer.batch_size = 32
