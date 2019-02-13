@@ -9,12 +9,12 @@ import gin.tf.external_configurables
 
 DQNAgent.gamma = 0.99
 DQNAgent.update_horizon = 1
-DQNAgent.min_replay_history = 20000  # agent steps
-DQNAgent.update_period = 4
-DQNAgent.target_update_period = 8000  # agent steps
+DQNAgent.min_replay_history = 50000   #20000  # agent steps
+DQNAgent.update_period = 1  #4
+DQNAgent.target_update_period = 1000 # 8000  # agent steps
 DQNAgent.epsilon_train = 0.01
 DQNAgent.epsilon_eval = 0.001
-DQNAgent.epsilon_decay_period = 250000  # agent steps
+DQNAgent.epsilon_decay_period = 1000000   #250000  # agent steps
 DQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
 DQNAgent.optimizer = @tf.train.RMSPropOptimizer()
 
@@ -28,10 +28,10 @@ atari_lib.create_atari_environment.game_name = 'cars'
 # Sticky actions with probability 0.25, as suggested by (Machado et al., 2017).
 atari_lib.create_atari_environment.sticky_actions = False
 create_agent.agent_name = 'dqn'
-Runner.num_iterations = 10000 #200
-Runner.training_steps =  250000 #250000  # agent steps
-Runner.evaluation_steps = 125000 #125000  # agent steps
-Runner.max_steps_per_episode = 27000  # agent steps
+Runner.num_iterations = 2000 #200
+Runner.training_steps =  25000 #250000  # agent steps
+Runner.evaluation_steps = 12500 #125000  # agent steps
+Runner.max_steps_per_episode = 1000 #27000  # agent steps
 
 WrappedReplayBuffer.replay_capacity = 1000000 #1000000
 WrappedReplayBuffer.batch_size = 32
