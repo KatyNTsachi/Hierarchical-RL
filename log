@@ -4,72 +4,37 @@ Loading chipmunk for Linux (64bit) [/home/deep7/hierarchy/local/lib/python2.7/si
 Initializing cpSpace - Chipmunk v6.2.0 (Debug Enabled)
 Compile with -DNDEBUG defined to disable debug mode and runtime assertion checks
 [33mWARN: Environment '<class 'gym_cars.envs.environment.carsEnv'>' has deprecated methods '_step' and '_reset' rather than 'step' and 'reset'. Compatibility code invoked. Set _gym_disable_underscore_compat = True to disable this behavior.[0m
-2019-02-13 00:22:53.378037: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
-2019-02-13 00:22:53.471123: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2019-02-13 00:22:53.471470: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+2019-02-15 00:05:45.322968: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2019-02-15 00:05:45.428204: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2019-02-15 00:05:45.428675: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
 name: GeForce GTX 1080 major: 6 minor: 1 memoryClockRate(GHz): 1.8095
 pciBusID: 0000:01:00.0
-totalMemory: 7.93GiB freeMemory: 7.53GiB
-2019-02-13 00:22:53.471484: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
-2019-02-13 00:22:53.698992: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
-2019-02-13 00:22:53.699028: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
-2019-02-13 00:22:53.699036: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
-2019-02-13 00:22:53.699176: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 7260 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080, pci bus id: 0000:01:00.0, compute capability: 6.1)
-I0213 00:22:53.700619 140091435497280 tf_logging.py:115] Creating DQNAgent agent with the following parameters:
-I0213 00:22:53.700875 140091435497280 tf_logging.py:115] 	 gamma: 0.990000
-I0213 00:22:53.700930 140091435497280 tf_logging.py:115] 	 update_horizon: 1.000000
-I0213 00:22:53.700973 140091435497280 tf_logging.py:115] 	 min_replay_history: 20000
-I0213 00:22:53.701013 140091435497280 tf_logging.py:115] 	 update_period: 4
-I0213 00:22:53.701050 140091435497280 tf_logging.py:115] 	 target_update_period: 8000
-I0213 00:22:53.701086 140091435497280 tf_logging.py:115] 	 epsilon_train: 0.010000
-I0213 00:22:53.701122 140091435497280 tf_logging.py:115] 	 epsilon_eval: 0.001000
-I0213 00:22:53.701159 140091435497280 tf_logging.py:115] 	 epsilon_decay_period: 250000
-I0213 00:22:53.701195 140091435497280 tf_logging.py:115] 	 tf_device: /gpu:0
-I0213 00:22:53.701231 140091435497280 tf_logging.py:115] 	 use_staging: True
-I0213 00:22:53.701267 140091435497280 tf_logging.py:115] 	 optimizer: <tensorflow.python.training.rmsprop.RMSPropOptimizer object at 0x7f68f65e4fd0>
-I0213 00:22:53.702512 140091435497280 tf_logging.py:115] Creating a OutOfGraphReplayBuffer replay memory with the following parameters:
-I0213 00:22:53.702577 140091435497280 tf_logging.py:115] 	 observation_shape: (84, 84)
-I0213 00:22:53.702624 140091435497280 tf_logging.py:115] 	 observation_dtype: <type 'numpy.uint8'>
-I0213 00:22:53.702666 140091435497280 tf_logging.py:115] 	 stack_size: 4
-I0213 00:22:53.702704 140091435497280 tf_logging.py:115] 	 replay_capacity: 1000000
-I0213 00:22:53.702742 140091435497280 tf_logging.py:115] 	 batch_size: 32
-I0213 00:22:53.702779 140091435497280 tf_logging.py:115] 	 update_horizon: 1
-I0213 00:22:53.702815 140091435497280 tf_logging.py:115] 	 gamma: 0.990000
-I0213 00:22:54.713943 140091435497280 tf_logging.py:115] Restoring parameters from ~/hierarchy/Hierarchical-RL/checkpoints/tf_ckpt-1
-I0213 00:22:54.769481 140091435497280 tf_logging.py:115] Reloaded checkpoint and will start from iteration 2
-I0213 00:22:54.769622 140091435497280 tf_logging.py:115] Beginning training...
-I0213 00:22:54.769738 140091435497280 tf_logging.py:115] Starting iteration 2
-Steps executed: 307 Episode length: 307 Return: -400.0Steps executed: 453 Episode length: 146 Return: -400.0Steps executed: 685 Episode length: 232 Return: -350.0Steps executed: 1338 Episode length: 653 Return: -400.0Steps executed: 2121 Episode length: 783 Return: -400.0Steps executed: 2764 Episode length: 643 Return: -400.0Steps executed: 3298 Episode length: 534 Return: -400.0Steps executed: 3907 Episode length: 609 Return: -350.0Steps executed: 4202 Episode length: 295 Return: -350.0Traceback (most recent call last):
-  File "/usr/lib/python2.7/runpy.py", line 174, in _run_module_as_main
-    "__main__", fname, loader, pkg_name)
-  File "/usr/lib/python2.7/runpy.py", line 72, in _run_code
-    exec code in run_globals
-  File "/home/deep7/hierarchy/Hierarchical-RL/dopamine/discrete_domains/train.py", line 61, in <module>
-    app.run(main)
-  File "/home/deep7/hierarchy/local/lib/python2.7/site-packages/absl/app.py", line 300, in run
-    _run_main(main, args)
-  File "/home/deep7/hierarchy/local/lib/python2.7/site-packages/absl/app.py", line 251, in _run_main
-    sys.exit(main(argv))
-  File "/home/deep7/hierarchy/Hierarchical-RL/dopamine/discrete_domains/train.py", line 56, in main
-    runner.run_experiment()
-  File "dopamine/discrete_domains/run_experiment.py", line 477, in run_experiment
-    statistics = self._run_one_iteration(iteration)
-  File "dopamine/discrete_domains/run_experiment.py", line 409, in _run_one_iteration
-    statistics)
-  File "dopamine/discrete_domains/run_experiment.py", line 361, in _run_train_phase
-    self._training_steps, statistics, 'train')
-  File "dopamine/discrete_domains/run_experiment.py", line 330, in _run_one_phase
-    episode_length, episode_return = self._run_one_episode()
-  File "dopamine/discrete_domains/run_experiment.py", line 303, in _run_one_episode
-    action = self._agent.step(reward, observation)
-  File "dopamine/agents/dqn/dqn_agent.py", line 363, in step
-    self._store_transition(self._last_observation, self.action, reward, False)
-  File "dopamine/agents/dqn/dqn_agent.py", line 463, in _store_transition
-    self._replay.add(last_observation, action, reward, is_terminal)
-  File "dopamine/replay_memory/circular_replay_buffer.py", line 773, in add
-    self.memory.add(observation, action, reward, terminal, *args)
-  File "dopamine/replay_memory/circular_replay_buffer.py", line 256, in add
-    self._add(observation, action, reward, terminal, *args)
-  File "dopamine/replay_memory/circular_replay_buffer.py", line 268, in _add
-    self._store[arg_name][cursor] = arg
-IndexError: index 10000 is out of bounds for axis 0 with size 10000
+totalMemory: 7.93GiB freeMemory: 7.49GiB
+2019-02-15 00:05:45.428703: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2019-02-15 00:05:45.653890: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2019-02-15 00:05:45.653922: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2019-02-15 00:05:45.653929: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2019-02-15 00:05:45.654061: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 7222 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080, pci bus id: 0000:01:00.0, compute capability: 6.1)
+I0215 00:05:45.655652 140348342318912 tf_logging.py:115] Creating DQNAgent agent with the following parameters:
+I0215 00:05:45.655905 140348342318912 tf_logging.py:115] 	 gamma: 0.990000
+I0215 00:05:45.655958 140348342318912 tf_logging.py:115] 	 update_horizon: 1.000000
+I0215 00:05:45.656002 140348342318912 tf_logging.py:115] 	 min_replay_history: 50000
+I0215 00:05:45.656040 140348342318912 tf_logging.py:115] 	 update_period: 1
+I0215 00:05:45.656079 140348342318912 tf_logging.py:115] 	 target_update_period: 1000
+I0215 00:05:45.656115 140348342318912 tf_logging.py:115] 	 epsilon_train: 0.010000
+I0215 00:05:45.656151 140348342318912 tf_logging.py:115] 	 epsilon_eval: 0.001000
+I0215 00:05:45.656188 140348342318912 tf_logging.py:115] 	 epsilon_decay_period: 1000000
+I0215 00:05:45.656223 140348342318912 tf_logging.py:115] 	 tf_device: /gpu:0
+I0215 00:05:45.656258 140348342318912 tf_logging.py:115] 	 use_staging: True
+I0215 00:05:45.656292 140348342318912 tf_logging.py:115] 	 optimizer: <tensorflow.python.training.rmsprop.RMSPropOptimizer object at 0x7fa4c736c8d0>
+I0215 00:05:45.657501 140348342318912 tf_logging.py:115] Creating a OutOfGraphReplayBuffer replay memory with the following parameters:
+I0215 00:05:45.657568 140348342318912 tf_logging.py:115] 	 observation_shape: (84, 84)
+I0215 00:05:45.657615 140348342318912 tf_logging.py:115] 	 observation_dtype: <type 'numpy.uint8'>
+I0215 00:05:45.657656 140348342318912 tf_logging.py:115] 	 stack_size: 4
+I0215 00:05:45.657696 140348342318912 tf_logging.py:115] 	 replay_capacity: 1000000
+I0215 00:05:45.657733 140348342318912 tf_logging.py:115] 	 batch_size: 32
+I0215 00:05:45.657771 140348342318912 tf_logging.py:115] 	 update_horizon: 1
+I0215 00:05:45.657807 140348342318912 tf_logging.py:115] 	 gamma: 0.990000
+I0215 00:05:46.497383 140348342318912 tf_logging.py:115] Beginning training...
+I0215 00:05:46.497528 140348342318912 tf_logging.py:115] Starting iteration 0
+Steps executed: 1000 Episode length: 1000 Return: -3900.0Steps executed: 2000 Episode length: 1000 Return: -3800.0Steps executed: 3000 Episode length: 1000 Return: -4000.0Steps executed: 4000 Episode length: 1000 Return: -3800.0Steps executed: 5000 Episode length: 1000 Return: -3950.0Steps executed: 6000 Episode length: 1000 Return: -3850.0Steps executed: 7000 Episode length: 1000 Return: -3700.0Steps executed: 8000 Episode length: 1000 Return: -3750.0Steps executed: 9000 Episode length: 1000 Return: -3850.0Steps executed: 10000 Episode length: 1000 Return: -3900.0Steps executed: 11000 Episode length: 1000 Return: -3850.0Steps executed: 12000 Episode length: 1000 Return: -3750.0

@@ -147,9 +147,9 @@ class carsEnv(gym.Env):
 	    #down wall
             pymunk.Segment(
                 self.space.static_body,
-                (1, 1), (WIDTH, 1), WIDTH_OF_FRAME),
+                (1, 1), (WIDTH, 1), WIDTH_OF_FRAME),]
 
-	
+	'''
 	    #vertical L wall barrier
             pymunk.Segment(
                 self.space.static_body,
@@ -169,8 +169,8 @@ class carsEnv(gym.Env):
             pymunk.Segment(
                 self.space.static_body,
                  ( BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA), ( WIDTH - BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA ), WIDTH_OF_FRAME ),
-
-    		]
+	'''
+    		
         
         for i,s in enumerate(static):
             s.friction = 1.
@@ -183,11 +183,12 @@ class carsEnv(gym.Env):
         # Create some obstacles, semi-randomly.
         # We'll create three and they'll move around to prevent over-fitting.
         self.obstacles = []
+	'''
         self.obstacles.append( self.create_obstacle( WIDTH * 0.2 , HEIGHT * 0.7 , 120) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.7 , HEIGHT * 0.7 , 70 ) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.7 , HEIGHT * 0.2 , 50 ) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.35, HEIGHT * 0.35, 40 ) )
-        
+        '''
         #prizes + Create first prize
         self.prizes = []  
         self.put_prize()
@@ -413,7 +414,7 @@ class carsEnv(gym.Env):
 
 	    #if we touch we increase counter		
 	    self.num_of_collected_prizes=self.num_of_collected_prizes + 1
-                    
+        reward = reward - 1           
         return reward
     
     
@@ -546,6 +547,7 @@ class carsEnv(gym.Env):
     def oneDeathReset(self):
 
         #reset obstacle position
+	'''
         self.obstacles[0].position = ( WIDTH * 0.2 , HEIGHT * 0.7  )
         self.obstacles[1].position = ( WIDTH * 0.7 , HEIGHT * 0.7  )
         self.obstacles[2].position = ( WIDTH * 0.7 , HEIGHT * 0.2  )
@@ -557,7 +559,7 @@ class carsEnv(gym.Env):
             angle = np.random.rand() * 2 * np.pi - np.pi 
             direction = Vec2d(1, 0).rotated( angle )
             obstacle.velocity = speed * direction
-	
+	'''
 	#reset car position
 	self.car_body.position  = (100, 100)
 
@@ -601,7 +603,7 @@ class carsEnv(gym.Env):
         (reward, done) = self.frame_step(action)
         obs            = self.get_observation()
         info           = {}
-
+	
         return obs, reward, done, info
     
 

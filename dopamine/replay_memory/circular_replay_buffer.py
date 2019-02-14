@@ -187,6 +187,7 @@ class OutOfGraphReplayBuffer(object):
       self._store[storage_element.name] = np.empty(
           array_shape, dtype=storage_element.type)
 
+
   def get_add_args_signature(self):
     """The signature of the add function.
 
@@ -265,6 +266,7 @@ class OutOfGraphReplayBuffer(object):
 
     arg_names = [e.name for e in self.get_add_args_signature()]
     for arg_name, arg in zip(arg_names, args):
+
       self._store[arg_name][cursor] = arg
 
     self.add_count += 1
