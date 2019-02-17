@@ -45,6 +45,7 @@ NATURE_DQN_DTYPE = tf.uint8  # DType of Atari 2600 observations.
 NATURE_DQN_STACK_SIZE = 4  # Number of frames in the state stack.
 
 
+
 # `copy_roms` is only needed internally to copy ROMS from CNS.
 @gin.configurable
 def copy_roms(source_dir, destination_dir=None):

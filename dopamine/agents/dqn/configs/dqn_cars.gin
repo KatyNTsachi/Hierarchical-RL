@@ -1,35 +1,37 @@
-# Hyperparameters for a simple DQN-style Cartpole agent. The hyperparameters
-# chosen achieve reasonable performance.
-import dopamine.discrete_domains.gym_lib
+# Hyperparameters used in Mnih et al. (2015).
+import dopamine.discrete_domains.atari_lib
 import dopamine.discrete_domains.run_experiment
 import dopamine.agents.dqn.dqn_agent
 import dopamine.replay_memory.circular_replay_buffer
 import gin.tf.external_configurables
 
-DQNAgent.observation_shape = %gym_lib.CARS_OBSERVATION_SHAPE
-DQNAgent.observation_dtype = %gym_lib.CARS_OBSERVATION_DTYPE
-DQNAgent.stack_size = %gym_lib.CARS_STACK_SIZE
-DQNAgent.network = @gym_lib.cars_dqn_network
 DQNAgent.gamma = 0.99
 DQNAgent.update_horizon = 1
-DQNAgent.min_replay_history = 50 #500
-DQNAgent.update_period = 4
-DQNAgent.target_update_period = 100
-DQNAgent.epsilon_fn = @dqn_agent.identity_epsilon
+DQNAgent.min_replay_history = 50000  # agent steps
+DQNAgent.update_period = 1 #4
+DQNAgent.target_update_period = 1000 #10000  # agent steps
+DQNAgent.epsilon_train = 0.01 # 0.1
+DQNAgent.epsilon_eval =  0.001 # 0.05
+DQNAgent.epsilon_decay_period = 1000000  # agent steps
 DQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
-DQNAgent.optimizer = @tf.train.AdamOptimizer()
+DQNAgent.optimizer = @tf.train.RMSPropOptimizer()
 
-tf.train.AdamOptimizer.learning_rate = 0.001
-tf.train.AdamOptimizer.epsilon = 0.0003125
+tf.train.RMSPropOptimizer.learning_rate = 0.0025 #0.00025
+tf.train.RMSPropOptimizer.decay = 0.95
+tf.train.RMSPropOptimizer.momentum = 0.0
+tf.train.RMSPropOptimizer.epsilon = 0.00001
+tf.train.RMSPropOptimizer.centered = True
 
-create_gym_environment.environment_name = 'cars'
-create_gym_environment.version = 'v0'
+atari_lib.create_atari_environment.game_name = 'cars'
+# Deterministic ALE version used in the DQN Nature paper (Mnih et al., 2015).
+atari_lib.create_atari_environment.sticky_actions = False
 create_agent.agent_name = 'dqn'
-Runner.create_environment_fn = @gym_lib.create_gym_environment
-Runner.num_iterations = 500
-Runner.training_steps = 1000
-Runner.evaluation_steps = 1000
-Runner.max_steps_per_episode = 200  # Default max episode length.
+Runner.num_iterations = 2000 #200
+Runner.training_steps = 25000 # 250000  # agent steps
+Runner.evaluation_steps = 12500  #125000  # agent steps
+Runner.max_steps_per_episode = 1000 # 27000  # agent steps
 
-WrappedReplayBuffer.replay_capacity = 50 # 50000
-WrappedReplayBuffer.batch_size = 128
+AtariPreprocessing.terminal_on_life_loss = True
+
+WrappedReplayBuffer.replay_capacity = 1000000
+WrappedReplayBuffer.batch_size = 32
