@@ -1,4 +1,8 @@
 import os
+import cv2
+import time
+import numpy as np
+
 THERE_IS_NOT_SCREEN_FLAG=False
 if THERE_IS_NOT_SCREEN_FLAG==True:
     os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -13,7 +17,7 @@ from pygame.color import THECOLORS
 import pymunk
 from pymunk.vec2d import Vec2d
 from pymunk.pygame_util import draw
-import time
+
 
 import sys
 import gym
@@ -99,7 +103,7 @@ class carsEnv(gym.Env):
 
     metadata = {"render.modes": ["human", "ansi"]}
 
-    def __init__(self, beam_size=32, graph=None, goal_reward=10.0):
+    def __init__(self):
         
         ############################################## dopamin initilization ##############################################
         self.screen_size       = 210
@@ -143,9 +147,9 @@ class carsEnv(gym.Env):
 	    #down wall
             pymunk.Segment(
                 self.space.static_body,
-                (1, 1), (WIDTH, 1), WIDTH_OF_FRAME),
+                (1, 1), (WIDTH, 1), WIDTH_OF_FRAME),]
 
-	
+	'''
 	    #vertical L wall barrier
             pymunk.Segment(
                 self.space.static_body,
@@ -165,8 +169,8 @@ class carsEnv(gym.Env):
             pymunk.Segment(
                 self.space.static_body,
                  ( BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA), ( WIDTH - BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA ), WIDTH_OF_FRAME ),
-
-    		]
+	'''
+    		
         
         for i,s in enumerate(static):
             s.friction = 1.
@@ -179,13 +183,15 @@ class carsEnv(gym.Env):
         # Create some obstacles, semi-randomly.
         # We'll create three and they'll move around to prevent over-fitting.
         self.obstacles = []
+	'''
         self.obstacles.append( self.create_obstacle( WIDTH * 0.2 , HEIGHT * 0.7 , 120) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.7 , HEIGHT * 0.7 , 70 ) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.7 , HEIGHT * 0.2 , 50 ) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.35, HEIGHT * 0.35, 40 ) )
-        
-        #prizes
+        '''
+        #prizes + Create first prize
         self.prizes = []  
+        self.put_prize()
         
 	#collisions
 	#self.colision_from_up   = False
@@ -408,7 +414,7 @@ class carsEnv(gym.Env):
 
 	    #if we touch we increase counter		
 	    self.num_of_collected_prizes=self.num_of_collected_prizes + 1
-                    
+        reward = reward - 1           
         return reward
     
     
@@ -469,8 +475,6 @@ class carsEnv(gym.Env):
         
 	
 	if self.wall_collision:
-	    import time
-    	    time.sleep(10)
 	    self.wall_collision = False
 
 	if self.num_of_collected_prizes >= MAX_NUM_OF_COLLECTED_PRIZES or self.lives<1:
@@ -489,7 +493,6 @@ class carsEnv(gym.Env):
 
 	if self.dont_move == True:
 	    #print("we sropped the car")		
-	    #import time
 	    #time.sleep(5)
 	    self.car_body.velocity.x = 0
 	    self.car_body.velocity.y = 0
@@ -544,6 +547,7 @@ class carsEnv(gym.Env):
     def oneDeathReset(self):
 
         #reset obstacle position
+	'''
         self.obstacles[0].position = ( WIDTH * 0.2 , HEIGHT * 0.7  )
         self.obstacles[1].position = ( WIDTH * 0.7 , HEIGHT * 0.7  )
         self.obstacles[2].position = ( WIDTH * 0.7 , HEIGHT * 0.2  )
@@ -555,7 +559,7 @@ class carsEnv(gym.Env):
             angle = np.random.rand() * 2 * np.pi - np.pi 
             direction = Vec2d(1, 0).rotated( angle )
             obstacle.velocity = speed * direction
-	
+	'''
 	#reset car position
 	self.car_body.position  = (100, 100)
 
@@ -569,7 +573,19 @@ class carsEnv(gym.Env):
 	self.remove_prize()
 	self.put_prize()
 
+    def get_observation(self):
+	obs = pygame.surfarray.array3d(screen)
+	#shrink output
+	#obs = cv2.cvtColor( obs, cv2.COLOR_BGR2GRAY )
+	#obs = cv2.resize( obs, None, fx=0.08, fy=0.08, interpolation = cv2.INTER_AREA )
+	return obs
 
+	
+    def getScreenGrayscale(self,obs):
+	
+	if np.shape(np.shape(obs))[0] == 2:
+	    return obs 
+	return cv2.cvtColor( obs, cv2.COLOR_BGR2GRAY )
 
     def _reset(self):
 	
@@ -577,18 +593,17 @@ class carsEnv(gym.Env):
 	self.lives                   = NUM_OF_LIVES
         self.num_steps               = 0
 	self.oneDeathReset()
-	obs = pygame.surfarray.array3d(screen)
-
-        return obs
+	obs = self.get_observation()
+        return obs	
         
         
         
     def _step(self, action):
         
         (reward, done) = self.frame_step(action)
-        obs            = pygame.surfarray.array3d(screen)
+        obs            = self.get_observation()
         info           = {}
-	
+#         print("lives ",self.lives)
         return obs, reward, done, info
     
 
@@ -597,9 +612,12 @@ class carsEnv(gym.Env):
         
         pass
 
-    
-   
-    
+
+#game = carsEnv()
+#while True:
+#    game._step(1)
+#    time.sleep(1)
+	
     
 
 
