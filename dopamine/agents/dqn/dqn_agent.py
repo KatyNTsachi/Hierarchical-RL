@@ -66,7 +66,6 @@ def linearly_decaying_epsilon(decay_period, step, warmup_steps, epsilon):
   bonus = np.clip(bonus, 0., 1. - epsilon)
   return epsilon + bonus
 
-
 @gin.configurable
 def identity_epsilon(unused_decay_period, unused_step, unused_warmup_steps,
                      epsilon):
