@@ -257,6 +257,12 @@ class Runner(object):
       The observation, reward, and is_terminal values returned from the
         environment.
     """
+    
+    #turn on the display
+    """    
+    self._environment.render(mode='human') 
+    time.sleep(1/60)
+    """
     observation, reward, is_terminal, _ = self._environment.step(action)
     return observation, reward, is_terminal
 
