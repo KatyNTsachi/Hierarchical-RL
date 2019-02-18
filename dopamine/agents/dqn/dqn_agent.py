@@ -22,7 +22,7 @@ import collections
 import math
 import os
 import random
-
+import matplotlib.pyplot as plt
 
 
 from dopamine.discrete_domains import atari_lib
@@ -439,6 +439,11 @@ class DQNAgent(object):
     # Set current observation. We do the reshaping to handle environments
     # without frame stacking.
     self._observation = np.reshape(observation, self.observation_shape)
+
+    plt.figure()
+    plt.imshow(self._observation)
+    plt.show()
+
     # Swap out the oldest frame with the current frame.
     self.state = np.roll(self.state, -1, axis=-1)
     self.state[0, ..., -1] = self._observation

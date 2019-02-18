@@ -258,6 +258,7 @@ class Runner(object):
         environment.
     """
     observation, reward, is_terminal, _ = self._environment.step(action)
+   
     return observation, reward, is_terminal
 
   def _end_episode(self, reward):
