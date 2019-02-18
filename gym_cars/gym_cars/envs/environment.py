@@ -603,7 +603,7 @@ class carsEnv(gym.Env):
         (reward, done) = self.frame_step(action)
         obs            = self.get_observation()
         info           = {}
-#         print("lives ",self.lives)
+
         return obs, reward, done, info
     
 
