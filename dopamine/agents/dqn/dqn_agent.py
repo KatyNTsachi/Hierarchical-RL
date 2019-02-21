@@ -438,11 +438,16 @@ class DQNAgent(object):
     """
     # Set current observation. We do the reshaping to handle environments
     # without frame stacking.
+    #print(np.shape(observation))
+    #plt.figure()
+    #plt.imshow( observation[:,:,0])
+    #plt.show()
+    
     self._observation = np.reshape(observation, self.observation_shape)
-
-    plt.figure()
-    plt.imshow(self._observation)
-    plt.show()
+    ##print(np.shape(self._observation))
+    #plt.figure()
+    #plt.imshow(self._observation)
+    #plt.show()
 
     # Swap out the oldest frame with the current frame.
     self.state = np.roll(self.state, -1, axis=-1)

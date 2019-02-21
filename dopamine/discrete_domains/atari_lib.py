@@ -37,7 +37,7 @@ import tensorflow as tf
 
 import gin.tf
 import cv2
-
+import matplotlib.pyplot as plt
 slim = tf.contrib.slim
 
 
@@ -378,7 +378,10 @@ class AtariPreprocessing(object):
       # We max-pool over the last two frames, in grayscale.
       elif time_step >= self.frame_skip - 2:
         t = time_step - (self.frame_skip - 2)
-        self._fetch_grayscale_observation(self.screen_buffer[t])
+        self.screen_buffer[t] = self._fetch_grayscale_observation(self.screen_buffer[t])
+	
+        
+
 
     # Pool the last two observations.
     observation = self._pool_and_resize()
@@ -397,7 +400,8 @@ class AtariPreprocessing(object):
     Returns:
       observation: numpy array, the current observation in grayscale.
     """
-    self.environment.getScreenGrayscale(output)
+    output = self.environment.getScreenGrayscale(output)
+
     return output
 
   def _pool_and_resize(self):

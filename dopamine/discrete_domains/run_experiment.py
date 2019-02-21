@@ -21,7 +21,7 @@ from __future__ import print_function
 import os
 import sys
 import time
-
+import matplotlib.pyplot as plt
 from dopamine.agents.dqn import dqn_agent
 from dopamine.agents.implicit_quantile import implicit_quantile_agent
 from dopamine.agents.rainbow import rainbow_agent
@@ -258,7 +258,7 @@ class Runner(object):
         environment.
     """
     observation, reward, is_terminal, _ = self._environment.step(action)
-   
+ 
     return observation, reward, is_terminal
 
   def _end_episode(self, reward):
