@@ -5,7 +5,7 @@ import numpy as np
 
 from resizeimage import resizeimage
 
-THERE_IS_NOT_SCREEN_FLAG=True
+THERE_IS_NOT_SCREEN_FLAG=False
 if THERE_IS_NOT_SCREEN_FLAG==True:
     os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -47,7 +47,7 @@ CAT_RELATED_TO_CAR      = 5
 CAR_RADIUS              = 25
 EDGE                    = CAR_RADIUS+10
 WIDTH_OF_FRAME          = 3
-PIXEL_DELTA 		= 1
+PIXEL_DELTA 		    = 1
 BARRIER_FACTOR          = 1.5
 FRAME_FOR_PRIZE         = 5
 
