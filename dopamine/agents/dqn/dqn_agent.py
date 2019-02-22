@@ -29,7 +29,7 @@ from dopamine.discrete_domains import atari_lib
 from dopamine.replay_memory import circular_replay_buffer
 import numpy as np
 import tensorflow as tf
-
+import matplotlib.pyplot as plt
 import gin.tf
 
 slim = tf.contrib.slim
@@ -355,7 +355,9 @@ class DQNAgent(object):
     Returns:
       int, the selected action.
     """
+
     self._last_observation = self._observation
+    
     self._record_observation(observation)
 
     if not self.eval_mode:

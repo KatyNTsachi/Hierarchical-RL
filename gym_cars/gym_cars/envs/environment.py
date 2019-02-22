@@ -5,7 +5,7 @@ import numpy as np
 
 from resizeimage import resizeimage
 
-THERE_IS_NOT_SCREEN_FLAG=False
+THERE_IS_NOT_SCREEN_FLAG=True
 if THERE_IS_NOT_SCREEN_FLAG==True:
     os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -577,16 +577,6 @@ class carsEnv(gym.Env):
 
     def get_observation(self):
 	obs = pygame.surfarray.array3d(screen)
-	#shrink output
-	#obs = cv2.cvtColor( obs, cv2.COLOR_BGR2GRAY )
-	#obs = cv2.resize( obs, None, fx=0.08, fy=0.08, interpolation = cv2.INTER_AREA )
-	obs = cv2.resize( obs, (84, 84), interpolation = cv2.INTER_AREA )
-	#obs = resizeimage.resize_cover(obs, [84, 84])
-	#plt.figure()
-	#plt.imshow(obs)
-	#plt.show()
-	#print(np.shape(obs))
-
 	return obs
 
 	
@@ -594,7 +584,7 @@ class carsEnv(gym.Env):
 
 	obs = self.get_observation()
 	obs = cv2.cvtColor( obs, cv2.COLOR_BGR2GRAY )
-	
+
 	return obs
 
     def _reset(self):
