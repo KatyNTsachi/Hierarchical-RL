@@ -29,8 +29,9 @@ from gym.utils import seeding
 
 
 # PyGame init
-WIDTH  = 1000
-HEIGHT = 700
+WIDTH     = 1000
+HEIGHT    = 700
+HIGHT_POS = HEIGHT/2
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -110,7 +111,7 @@ class carsEnv(gym.Env):
         ############################################## dopamin initilization ##############################################
         self.screen_size       = 210
         self.observation_space = spaces.Box(low=0, high=255, dtype=np.uint8, shape=(HEIGHT,WIDTH))
-        self.action_space      = spaces.Discrete(len([0,1,2,3]))
+        self.action_space      = spaces.Discrete(len([0,1]))
         self.reward_range      = 150
         self.lives             = NUM_OF_LIVES
         ############################################## dopamin initilization ##############################################
@@ -123,7 +124,7 @@ class carsEnv(gym.Env):
         self.space.gravity = pymunk.Vec2d(0., 0.)
 
         # Create the car.
-        self.create_car(100, 100, 0.5)
+        self.create_car(100, HIGHT_POS, 0.5)
 
         # Record steps.
         self.num_steps = 0
@@ -381,7 +382,7 @@ class carsEnv(gym.Env):
         
         x=random.randint(0+FRAME_FOR_PRIZE, WIDTH-1-FRAME_FOR_PRIZE)
         y=random.randint(0+FRAME_FOR_PRIZE, HEIGHT-1-FRAME_FOR_PRIZE)
-        tmp_c,tmp_s=self.create_prize(x, y, 30)
+        tmp_c,tmp_s=self.create_prize(x, HIGHT_POS, 30)
         self.prizes.append((tmp_c,tmp_s))
      
     
@@ -416,7 +417,6 @@ class carsEnv(gym.Env):
 
 	    #if we touch we increase counter		
 	    self.num_of_collected_prizes=self.num_of_collected_prizes + 1
-        reward = reward - 1           
         return reward
     
     
@@ -435,16 +435,11 @@ class carsEnv(gym.Env):
 	#what is the action
         if action == 0:  # Turn left.
 	    car_velocity         = 1
-            self.car_body.angle -= .2
+            self.car_body.angle = 0
         elif action == 1:  # Turn right.
  	    car_velocity         = 1
-            self.car_body.angle += .2
-	elif action == 2:
- 	    car_velocity         = 1
-	    self.car_body.angle += .0
-	elif action == 3:
-	    car_velocity         = 0
-	    self.car_body.angle += .0
+            self.car_body.angle = np.pi
+	
                    
         # add prize.
         if self.num_steps % PRIZE_RELATED_TO_CAR == 0:
@@ -563,7 +558,7 @@ class carsEnv(gym.Env):
             obstacle.velocity = speed * direction
 	'''
 	#reset car position
-	self.car_body.position  = (100, 100)
+	self.car_body.position  = (100, HIGHT_POS)
 
 	#reset all collision flags
 	self.dont_move      = False
@@ -603,7 +598,6 @@ class carsEnv(gym.Env):
         (reward, done) = self.frame_step(action)
         obs            = self.get_observation()
         info           = {}
-
         return obs, reward, done, info
     
 
