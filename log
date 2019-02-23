@@ -37,3 +37,4 @@ I0223 10:20:35.619999 140226610296640 tf_logging.py:115] 	 update_horizon: 1
 I0223 10:20:35.620035 140226610296640 tf_logging.py:115] 	 gamma: 0.990000
 I0223 10:20:36.465883 140226610296640 tf_logging.py:115] Beginning training...
 I0223 10:20:36.466027 140226610296640 tf_logging.py:115] Starting iteration 0
+Steps executed: 1000 Episode length: 1000 Return: 150.0
