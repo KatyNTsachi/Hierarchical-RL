@@ -416,7 +416,7 @@ class carsEnv(gym.Env):
 
 	    #if we touch we increase counter		
 	    self.num_of_collected_prizes=self.num_of_collected_prizes + 1
-        reward = reward - 1           
+        
         return reward
     
     
