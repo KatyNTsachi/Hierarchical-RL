@@ -4,34 +4,34 @@ Loading chipmunk for Linux (64bit) [/home/deep7/hierarchy/local/lib/python2.7/si
 Initializing cpSpace - Chipmunk v6.2.0 (Debug Enabled)
 Compile with -DNDEBUG defined to disable debug mode and runtime assertion checks
 [33mWARN: Environment '<class 'gym_cars.envs.environment.carsEnv'>' has deprecated methods '_step' and '_reset' rather than 'step' and 'reset'. Compatibility code invoked. Set _gym_disable_underscore_compat = True to disable this behavior.[0m
-2019-02-27 10:59:00.981951: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
-2019-02-27 10:59:01.088787: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2019-02-27 10:59:01.089242: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+2019-02-27 11:37:42.466327: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2019-02-27 11:37:42.553140: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2019-02-27 11:37:42.553498: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
 name: GeForce GTX 1080 major: 6 minor: 1 memoryClockRate(GHz): 1.8095
 pciBusID: 0000:01:00.0
-totalMemory: 7.93GiB freeMemory: 7.46GiB
-2019-02-27 10:59:01.089266: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
-2019-02-27 10:59:01.322386: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
-2019-02-27 10:59:01.322422: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
-2019-02-27 10:59:01.322431: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
-2019-02-27 10:59:01.322570: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 7196 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080, pci bus id: 0000:01:00.0, compute capability: 6.1)
-I0227 10:59:01.324090 139927264732992 tf_logging.py:115] Creating DQNAgent agent with the following parameters:
-I0227 10:59:01.324338 139927264732992 tf_logging.py:115] 	 gamma: 0.990000
-I0227 10:59:01.324390 139927264732992 tf_logging.py:115] 	 update_horizon: 1.000000
-I0227 10:59:01.324434 139927264732992 tf_logging.py:115] 	 min_replay_history: 50000
-I0227 10:59:01.324474 139927264732992 tf_logging.py:115] 	 update_period: 1
-I0227 10:59:01.324511 139927264732992 tf_logging.py:115] 	 target_update_period: 1000
-I0227 10:59:01.324547 139927264732992 tf_logging.py:115] 	 epsilon_train: 0.010000
-I0227 10:59:01.324583 139927264732992 tf_logging.py:115] 	 epsilon_eval: 0.001000
-I0227 10:59:01.324619 139927264732992 tf_logging.py:115] 	 epsilon_decay_period: 1000000
-I0227 10:59:01.324655 139927264732992 tf_logging.py:115] 	 tf_device: /gpu:0
-I0227 10:59:01.324690 139927264732992 tf_logging.py:115] 	 use_staging: True
-I0227 10:59:01.324724 139927264732992 tf_logging.py:115] 	 optimizer: <tensorflow.python.training.rmsprop.RMSPropOptimizer object at 0x7f42c80a1450>
-I0227 10:59:01.326036 139927264732992 tf_logging.py:115] Creating a OutOfGraphReplayBuffer replay memory with the following parameters:
-I0227 10:59:01.326103 139927264732992 tf_logging.py:115] 	 observation_shape: (84, 84)
-I0227 10:59:01.326152 139927264732992 tf_logging.py:115] 	 observation_dtype: <type 'numpy.uint8'>
-I0227 10:59:01.326194 139927264732992 tf_logging.py:115] 	 stack_size: 4
-I0227 10:59:01.326232 139927264732992 tf_logging.py:115] 	 replay_capacity: 1000000
-I0227 10:59:01.326270 139927264732992 tf_logging.py:115] 	 batch_size: 32
-I0227 10:59:01.326306 139927264732992 tf_logging.py:115] 	 update_horizon: 1
-I0227 10:59:01.326340 139927264732992 tf_logging.py:115] 	 gamma: 0.990000
+totalMemory: 7.93GiB freeMemory: 7.44GiB
+2019-02-27 11:37:42.553513: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2019-02-27 11:37:42.765376: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2019-02-27 11:37:42.765411: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2019-02-27 11:37:42.765417: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2019-02-27 11:37:42.765559: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 7179 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080, pci bus id: 0000:01:00.0, compute capability: 6.1)
+I0227 11:37:42.767091 140522456590144 tf_logging.py:115] Creating DQNAgent agent with the following parameters:
+I0227 11:37:42.767338 140522456590144 tf_logging.py:115] 	 gamma: 0.990000
+I0227 11:37:42.767391 140522456590144 tf_logging.py:115] 	 update_horizon: 1.000000
+I0227 11:37:42.767435 140522456590144 tf_logging.py:115] 	 min_replay_history: 50000
+I0227 11:37:42.767474 140522456590144 tf_logging.py:115] 	 update_period: 1
+I0227 11:37:42.767513 140522456590144 tf_logging.py:115] 	 target_update_period: 1000
+I0227 11:37:42.767549 140522456590144 tf_logging.py:115] 	 epsilon_train: 0.010000
+I0227 11:37:42.767585 140522456590144 tf_logging.py:115] 	 epsilon_eval: 0.001000
+I0227 11:37:42.767621 140522456590144 tf_logging.py:115] 	 epsilon_decay_period: 1000000
+I0227 11:37:42.767658 140522456590144 tf_logging.py:115] 	 tf_device: /gpu:0
+I0227 11:37:42.767693 140522456590144 tf_logging.py:115] 	 use_staging: True
+I0227 11:37:42.767729 140522456590144 tf_logging.py:115] 	 optimizer: <tensorflow.python.training.rmsprop.RMSPropOptimizer object at 0x7fcd517b5490>
+I0227 11:37:42.769056 140522456590144 tf_logging.py:115] Creating a OutOfGraphReplayBuffer replay memory with the following parameters:
+I0227 11:37:42.769130 140522456590144 tf_logging.py:115] 	 observation_shape: (84, 84)
+I0227 11:37:42.769181 140522456590144 tf_logging.py:115] 	 observation_dtype: <type 'numpy.uint8'>
+I0227 11:37:42.769223 140522456590144 tf_logging.py:115] 	 stack_size: 4
+I0227 11:37:42.769263 140522456590144 tf_logging.py:115] 	 replay_capacity: 1000000
+I0227 11:37:42.769311 140522456590144 tf_logging.py:115] 	 batch_size: 32
+I0227 11:37:42.769350 140522456590144 tf_logging.py:115] 	 update_horizon: 1
+I0227 11:37:42.769387 140522456590144 tf_logging.py:115] 	 gamma: 0.990000
