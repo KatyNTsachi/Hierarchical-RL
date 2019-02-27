@@ -365,7 +365,7 @@ class AtariPreprocessing(object):
       # grayscale image from the ALE. This is a little faster.
       _, reward, game_over, info = self.environment.step(action)
       accumulated_reward += reward
-
+      
       if self.terminal_on_life_loss:
         new_lives = self.environment.lives
         is_terminal = game_over or new_lives < self.lives

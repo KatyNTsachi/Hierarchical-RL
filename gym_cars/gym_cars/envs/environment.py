@@ -5,7 +5,7 @@ import numpy as np
 
 from resizeimage import resizeimage
 
-THERE_IS_NOT_SCREEN_FLAG=True
+THERE_IS_NOT_SCREEN_FLAG = False
 if THERE_IS_NOT_SCREEN_FLAG==True:
     os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -40,16 +40,18 @@ clock = pygame.time.Clock()
 draw_screen  = True
 
 #shapes
-MIN_BALL_RADIUS         = 50
+
 PRIZE_RELATED_TO_CAR    = 100
 OBSTABLE_RELATED_TO_CAR = 300
 CAT_RELATED_TO_CAR      = 5
 CAR_RADIUS              = 25
-EDGE                    = CAR_RADIUS+10
+PRIZE_RADIUS            = 25
+EDGE                    = CAR_RADIUS + 10
 WIDTH_OF_FRAME          = 3
 PIXEL_DELTA 		    = 1
 BARRIER_FACTOR          = 1.5
 FRAME_FOR_PRIZE         = 5
+MIN_BALL_RADIUS         = CAR_RADIUS * 2
 
 #colors
 FOE    = THECOLORS["blue"]
@@ -59,10 +61,11 @@ OUT    = -1
 
 #prizes
 NUM_OF_LIVES                  = 5
-PRIZESCORE                    = 50
-DETHSCORE                     = -100
+PRIZESCORE                    = 1
+DETHSCORE                     = -1
+STEPSCORE                     = -0.1
 MAX_NUM_OF_PRIZES_AT_A_TIME   = 1
-MAX_NUM_OF_STEPS_FOR_THE_GAME = 1000000
+MAX_NUM_OF_STEPS_FOR_THE_GAME = 100000000000000
 MAX_NUM_OF_COLLECTED_PRIZES   = 100000000000000
 
 #velocity
@@ -149,14 +152,14 @@ class carsEnv(gym.Env):
 	    #down wall
             pymunk.Segment(
                 self.space.static_body,
-                (1, 1), (WIDTH, 1), WIDTH_OF_FRAME),]
+                (1, 1), (WIDTH, 1), WIDTH_OF_FRAME),
 
-	'''
+       
 	    #vertical L wall barrier
             pymunk.Segment(
                 self.space.static_body,
                 ( WIDTH / 2 - WIDTH_OF_FRAME - PIXEL_DELTA, BARRIER_FACTOR * MIN_BALL_RADIUS ), ( WIDTH / 2 - WIDTH_OF_FRAME - PIXEL_DELTA, HEIGHT - BARRIER_FACTOR * MIN_BALL_RADIUS ), WIDTH_OF_FRAME ),
- 
+      
 	    #horizontal U wall barrier 
             pymunk.Segment(
                 self.space.static_body,
@@ -170,8 +173,8 @@ class carsEnv(gym.Env):
 	    #horizontal D wall barrier
             pymunk.Segment(
                 self.space.static_body,
-                 ( BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA), ( WIDTH - BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA ), WIDTH_OF_FRAME ),
-	'''
+                 ( BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA), ( WIDTH - BARRIER_FACTOR * MIN_BALL_RADIUS, HEIGHT / 2 - WIDTH_OF_FRAME - PIXEL_DELTA ), WIDTH_OF_FRAME ),]
+
     		
         
         for i,s in enumerate(static):
@@ -185,12 +188,12 @@ class carsEnv(gym.Env):
         # Create some obstacles, semi-randomly.
         # We'll create three and they'll move around to prevent over-fitting.
         self.obstacles = []
-	'''
+	
         self.obstacles.append( self.create_obstacle( WIDTH * 0.2 , HEIGHT * 0.7 , 120) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.7 , HEIGHT * 0.7 , 70 ) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.7 , HEIGHT * 0.2 , 50 ) )
         self.obstacles.append( self.create_obstacle( WIDTH * 0.35, HEIGHT * 0.35, 40 ) )
-        '''
+        
         #prizes + Create first prize
         self.prizes = []  
         self.put_prize()
@@ -237,74 +240,70 @@ class carsEnv(gym.Env):
   
 
     def carAndObstacleCollision(self, space, arbiter):
+
         self.need_to_die = True
         return True
 
-
     def carAndPrizeCollision(self, space, arbiter):
+        
         self.got_prize = True
         return True
 
     #wall collisions
     def carAndWallLeftcollision(self, space, arbiter):
+        
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
-	if driving_direction.x<=0:
+        if driving_direction.x<=0:
             self.dont_move = True
-	else:
+        else:
             self.dont_move = False
 
         return True
 
     def carAndWallUpcollision(self, space, arbiter):
-	driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
-	if driving_direction.y>=0:
+        
+        driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
+        if driving_direction.y>=0:
             self.dont_move = True
-	else:
+        else:
             self.dont_move = False
 
         return True
 
     def carAndWallRightcollision(self, space, arbiter):
-	driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
-	if driving_direction.x>=0:
+        
+        driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
+        if driving_direction.x>=0:
             self.dont_move = True
-	else:
+        else:
             self.dont_move = False
 
         return True
 
 
     def carAndWallDowncollision(self, space, arbiter):
-	driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
-	if driving_direction.y<=0:
+        
+        driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
+        if driving_direction.y<=0:
             self.dont_move = True
-	else:
+        else:
             self.dont_move = False
 
         return True
 
-
-    def carAndWallVerticalcollision(self, space, arbiter):
-	'''
-        driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
-	if driving_direction.y>=0 && colision_from_down == False:
-            colision_from_up = True
-        elif driving_direction.y<=0 && colision_from_up == False:
-            colision_from_down = True
-	'''
-        return True
-	
-
-    def carAndWallHorizantalcollision(self, space, arbiter):
-	
-        return True
+    
+  
+    
+   
 	
     # separators
     def carAndWallseparator(self, space, arbiter):
+        
         self.dont_move = False
         return
 
     def _seed(self, seed=None):
+        
         self.np_random, seed1 = seeding.np_random(seed)
         # Derive a random seed. This gets passed as a uint, but gets
         # checked as an int elsewhere, so we need to keep it below
@@ -381,7 +380,7 @@ class carsEnv(gym.Env):
         
         x=random.randint(0+FRAME_FOR_PRIZE, WIDTH-1-FRAME_FOR_PRIZE)
         y=random.randint(0+FRAME_FOR_PRIZE, HEIGHT-1-FRAME_FOR_PRIZE)
-        tmp_c,tmp_s=self.create_prize(x, y, 30)
+        tmp_c,tmp_s=self.create_prize(x, y,PRIZE_RADIUS)
         self.prizes.append((tmp_c,tmp_s))
      
     
@@ -416,7 +415,7 @@ class carsEnv(gym.Env):
 
 	    #if we touch we increase counter		
 	    self.num_of_collected_prizes=self.num_of_collected_prizes + 1
-        
+        reward = reward + STEPSCORE
         return reward
     
     
@@ -549,7 +548,7 @@ class carsEnv(gym.Env):
     def oneDeathReset(self):
 
         #reset obstacle position
-	'''
+	
         self.obstacles[0].position = ( WIDTH * 0.2 , HEIGHT * 0.7  )
         self.obstacles[1].position = ( WIDTH * 0.7 , HEIGHT * 0.7  )
         self.obstacles[2].position = ( WIDTH * 0.7 , HEIGHT * 0.2  )
@@ -561,7 +560,7 @@ class carsEnv(gym.Env):
             angle = np.random.rand() * 2 * np.pi - np.pi 
             direction = Vec2d(1, 0).rotated( angle )
             obstacle.velocity = speed * direction
-	'''
+	
 	#reset car position
 	self.car_body.position  = (100, 100)
 
