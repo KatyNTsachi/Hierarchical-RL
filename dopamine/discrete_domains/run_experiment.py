@@ -289,7 +289,7 @@ class Runner(object):
       step_number += 1
 
       # Perform reward clipping.
-      reward = np.clip(reward, -1, 1)
+      reward = np.clip(reward, -10000, 10000)
 
       if (self._environment.game_over or
           step_number == self._max_steps_per_episode):
