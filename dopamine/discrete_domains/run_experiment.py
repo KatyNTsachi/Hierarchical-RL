@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 from dopamine.agents.dqn import dqn_agent
 from dopamine.agents.implicit_quantile import implicit_quantile_agent
 from dopamine.agents.rainbow import rainbow_agent
+from dopamine.agents.hierarchy import hierarchy_agent
 from dopamine.discrete_domains import atari_lib
 from dopamine.discrete_domains import checkpointer
 from dopamine.discrete_domains import iteration_statistics
@@ -85,6 +86,9 @@ def create_agent(sess, environment, agent_name=None, summary_writer=None,
     return implicit_quantile_agent.ImplicitQuantileAgent(
         sess, num_actions=environment.action_space.n,
         summary_writer=summary_writer)
+  elif agent_name == 'hierarchy':
+    return hierarchy_agent.HierarchyAgent(sess, num_actions=environment.action_space.n,
+                              summary_writer=summary_writer)
   else:
     raise ValueError('Unknown agent: {}'.format(agent_name))
 
