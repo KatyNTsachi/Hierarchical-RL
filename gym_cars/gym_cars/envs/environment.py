@@ -5,7 +5,7 @@ import numpy as np
 
 from resizeimage import resizeimage
 
-THERE_IS_NOT_SCREEN_FLAG = False
+THERE_IS_NOT_SCREEN_FLAG = True
 if THERE_IS_NOT_SCREEN_FLAG==True:
     os.environ["SDL_VIDEODRIVER"] = "dummy"
 

@@ -201,6 +201,18 @@ class HierarchyAgent(object):
     # environment.
     self._observation = None
     self._last_observation = None
+    
+    print('$'*20,"HIERARCHY",'$'*20)
+    print(self.gamma)
+    print(self.update_horizon)
+    print(self.min_replay_history)
+    print(self.update_period)
+    print(self.target_update_period)
+    print(self.epsilon_train)
+    print(self.epsilon_eval)
+    print(self.epsilon_decay_period)
+    
+
 
   def _get_network_type(self):
     """Returns the type of the outputs of a Q value network.
@@ -342,7 +354,6 @@ class HierarchyAgent(object):
     return self.action
 
   def step(self, reward, observation):
-    
     """Records the most recent transition and returns the agent's next action.
 
     We store the observation of the last time step since we want to store it
@@ -355,7 +366,7 @@ class HierarchyAgent(object):
     Returns:
       int, the selected action.
     """
-    #print('$'*50,"HIERARCHY",'$'*50)
+
     self._last_observation = self._observation
     
     self._record_observation(observation)
