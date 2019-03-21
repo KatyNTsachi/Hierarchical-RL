@@ -31,6 +31,9 @@ import numpy as np
 import tensorflow as tf
 import gin.tf
 
+# EDIT - import dqn
+from dopamine.agents.dqn import dqn_agent
+
 slim = tf.contrib.slim
 
 
@@ -171,7 +174,8 @@ class HierarchyAgent(object):
     self.epsilon_eval = epsilon_eval
     self.epsilon_decay_period = epsilon_decay_period
     self.update_period = update_period
-    self.eval_mode = False
+    # EDIT - use property decorator on eval_mode, not called here, dqn does not exist yet
+    self._eval_mode = False
     self.training_steps = 0
     self.optimizer = optimizer
     self.summary_writer = summary_writer
@@ -202,17 +206,9 @@ class HierarchyAgent(object):
     self._observation = None
     self._last_observation = None
     
-    print('$'*20,"HIERARCHY",'$'*20)
-    print(self.gamma)
-    print(self.update_horizon)
-    print(self.min_replay_history)
-    print(self.update_period)
-    print(self.target_update_period)
-    print(self.epsilon_train)
-    print(self.epsilon_eval)
-    print(self.epsilon_decay_period)
-    
-
+    # EDIT - initialize dqn agent and set its replay buffer
+    self.dqn = dqn_agent.DQNAgent(sess, num_actions=num_actions,summary_writer=summary_writer)
+    #self.dqn._replay = self._replay 
 
   def _get_network_type(self):
     """Returns the type of the outputs of a Q value network.
@@ -344,6 +340,7 @@ class HierarchyAgent(object):
     Returns:
       int, the selected action.
     """
+    """
     self._reset_state()
     self._record_observation(observation)
 
@@ -351,6 +348,10 @@ class HierarchyAgent(object):
       self._train_step()
 
     self.action = self._select_action()
+    return self.action
+    """
+    # EDIT - call dqn instead
+    self.action = self.dqn.begin_episode(observation)
     return self.action
 
   def step(self, reward, observation):
@@ -366,7 +367,7 @@ class HierarchyAgent(object):
     Returns:
       int, the selected action.
     """
-
+    """
     self._last_observation = self._observation
     
     self._record_observation(observation)
@@ -377,7 +378,10 @@ class HierarchyAgent(object):
 
     self.action = self._select_action()
     return self.action
-
+    """
+    # EDIT - call dqn instead
+    self.action = self.dqn.step(reward, observation)
+    return self.action
   def end_episode(self, reward):
     """Signals the end of the episode to the agent.
 
@@ -387,8 +391,12 @@ class HierarchyAgent(object):
     Args:
       reward: float, the last reward from the environment.
     """
+    """
     if not self.eval_mode:
       self._store_transition(self._observation, self.action, reward, True)
+      """
+    # EDIT - call dqn instead
+    self.dqn.end_episode(reward)
 
   def _select_action(self):
     """Select an action from the set of available actions.
@@ -551,3 +559,14 @@ class HierarchyAgent(object):
                         os.path.join(checkpoint_dir,
                                      'tf_ckpt-{}'.format(iteration_number)))
     return True
+
+    # EDIT - setter and getter for eval mode, eval mode shold be propagated to sub agents
+    @property
+    def eval_mode(self):
+        return self._eval_mode
+
+    @eval_mode.setter
+    def eval_mode(self, value):
+        self._eval_mode = value
+        self.dqn.eval_mode = value
+

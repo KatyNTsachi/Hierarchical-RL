@@ -430,6 +430,8 @@ class OutOfGraphReplayBuffer(object):
       min_id = self._stack_size - 1
       max_id = self.cursor() - self._update_horizon
       if max_id <= min_id:
+        
+        print('$'*10 + " replay_capacit: ", self._replay_capacity, " stack_size: " , self._stack_size, " update_horizon: ",   self._update_horizon)   
         raise RuntimeError('Cannot sample a batch with fewer than stack size '
                            '({}) + update_horizon ({}) transitions.'.
                            format(self._stack_size, self._update_horizon))

@@ -74,7 +74,7 @@ def identity_epsilon(unused_decay_period, unused_step, unused_warmup_steps,
 @gin.configurable
 class DQNAgent(object):
   """An implementation of the DQN agent."""
-
+  # EDIT - add replay as argument
   def __init__(self,
                sess,
                num_actions,
@@ -101,7 +101,8 @@ class DQNAgent(object):
                    epsilon=0.00001,
                    centered=True),
                summary_writer=None,
-               summary_writing_frequency=500):
+               summary_writing_frequency=500,
+               replay = None):
     """Initializes the agent and constructs the components of its graph.
 
     Args:
@@ -184,7 +185,10 @@ class DQNAgent(object):
       self.state = np.zeros(state_shape)
       self.state_ph = tf.placeholder(self.observation_dtype, state_shape,
                                      name='state_ph')
-      self._replay = self._build_replay_buffer(use_staging)
+      # EDIT - assign replay to _repalay
+      self._replay = replay
+      if replay == None :
+          self._replay = self._build_replay_buffer(use_staging)
 
       self._build_networks()
 

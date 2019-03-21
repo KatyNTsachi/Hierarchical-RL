@@ -20,7 +20,7 @@ is in charge of:
   . Frame skipping and color pooling.
   . Resizing the image before it is provided to the agent.
 """
-
+# CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -315,7 +315,7 @@ class AtariPreprocessing(object):
         environment.
     """
     self.environment.reset()
-    self.lives = self.environment.lives
+    self.lives = self.environment.ale.lives()
     self._fetch_grayscale_observation(self.screen_buffer[0])
     self.screen_buffer[1].fill(0)
     return self._pool_and_resize()
@@ -367,7 +367,7 @@ class AtariPreprocessing(object):
       accumulated_reward += reward
       
       if self.terminal_on_life_loss:
-        new_lives = self.environment.lives
+        new_lives = self.environment.ale.lives()
         is_terminal = game_over or new_lives < self.lives
         self.lives = new_lives
       else:
@@ -400,7 +400,7 @@ class AtariPreprocessing(object):
     Returns:
       observation: numpy array, the current observation in grayscale.
     """
-    output = self.environment.getScreenGrayscale(output)
+    output = self.environment.ale.getScreenGrayscale(output)
 
     return output
 
