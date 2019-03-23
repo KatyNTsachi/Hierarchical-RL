@@ -207,8 +207,10 @@ class HierarchyAgent(object):
     self._last_observation = None
     
     # EDIT - initialize dqn agent and set its replay buffer
-    self.dqn = dqn_agent.DQNAgent(sess, num_actions=num_actions,summary_writer=summary_writer)
-    #self.dqn._replay = self._replay 
+    self.agent_list = [] 
+    
+    self.agent_list.append( dqn_agent.DQNAgent(sess, num_actions=num_actions,summary_writer=summary_writer) )
+    
 
   def _get_network_type(self):
     """Returns the type of the outputs of a Q value network.
@@ -351,7 +353,8 @@ class HierarchyAgent(object):
     return self.action
     """
     # EDIT - call dqn instead
-    self.action = self.dqn.begin_episode(observation)
+    for agent in self.agent_list:
+        self.action = agent.begin_episode(observation)
     return self.action
 
   def step(self, reward, observation):
@@ -380,8 +383,11 @@ class HierarchyAgent(object):
     return self.action
     """
     # EDIT - call dqn instead
-    self.action = self.dqn.step(reward, observation)
+    
+    for agent in self.agent_list:
+        self.action = agent.step(reward, observation)
     return self.action
+
   def end_episode(self, reward):
     """Signals the end of the episode to the agent.
 
@@ -396,7 +402,11 @@ class HierarchyAgent(object):
       self._store_transition(self._observation, self.action, reward, True)
       """
     # EDIT - call dqn instead
-    self.dqn.end_episode(reward)
+    
+    
+    for agent in self.agent_list:
+        self.action = agent.end_episode(reward)
+    return self.action
 
   def _select_action(self):
     """Select an action from the set of available actions.
