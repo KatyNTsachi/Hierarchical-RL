@@ -19,7 +19,7 @@ is in charge of:
   . Frame skipping and color pooling.
   . Resizing the image before it is provided to the agent.
 """
-# ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL ORIGINAL
+# CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS CARS 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -29,19 +29,21 @@ import math
 
 import atari_py
 import gym
+import gym_cars
 from gym.spaces.box import Box
 import numpy as np
 import tensorflow as tf
 
 import gin.tf
 import cv2
-
+import matplotlib.pyplot as plt
 slim = tf.contrib.slim
 
 
 NATURE_DQN_OBSERVATION_SHAPE = (84, 84)  # Size of downscaled Atari 2600 frame.
 NATURE_DQN_DTYPE = tf.uint8  # DType of Atari 2600 observations.
 NATURE_DQN_STACK_SIZE = 4  # Number of frames in the state stack.
+
 
 
 # `copy_roms` is only needed internally to copy ROMS from CNS.
@@ -92,8 +94,10 @@ def create_atari_environment(game_name=None, sticky_actions=True):
     An Atari 2600 environment with some standard preprocessing.
   """
   assert game_name is not None
-  game_version = 'v0' if sticky_actions else 'v4'
-  full_game_name = '{}NoFrameskip-{}'.format(game_name, game_version)
+  #game_version = 'v0' if sticky_actions else 'v4'
+  game_version = 'v0'
+  #full_game_name = '{}NoFrameskip-{}'.format(game_name, game_version)
+  full_game_name = '{}-{}'.format(game_name, game_version)
   env = gym.make(full_game_name)
   # Strip out the TimeLimit wrapper from Gym, which caps us at 100k frames. We
   # handle this time limit internally instead, which lets us cap at 108k frames
@@ -292,7 +296,7 @@ class AtariPreprocessing(object):
         environment.
     """
     self.environment.reset()
-    self.lives = self.environment.ale.lives()
+    self.lives = self.environment.lives
     self._fetch_grayscale_observation(self.screen_buffer[0])
     self.screen_buffer[1].fill(0)
     return self._pool_and_resize()
@@ -309,7 +313,6 @@ class AtariPreprocessing(object):
       if mode='rgb_array': numpy array, the most recent screen.
       if mode='human': bool, whether the rendering was successful.
     """
-
     return self.environment.render(mode)
 
   def step(self, action):
@@ -336,9 +339,9 @@ class AtariPreprocessing(object):
       # grayscale image from the ALE. This is a little faster.
       _, reward, game_over, info = self.environment.step(action)
       accumulated_reward += reward
-
+      
       if self.terminal_on_life_loss:
-        new_lives = self.environment.ale.lives()
+        new_lives = self.environment.lives
         is_terminal = game_over or new_lives < self.lives
         self.lives = new_lives
       else:
@@ -349,7 +352,10 @@ class AtariPreprocessing(object):
       # We max-pool over the last two frames, in grayscale.
       elif time_step >= self.frame_skip - 2:
         t = time_step - (self.frame_skip - 2)
-        self._fetch_grayscale_observation(self.screen_buffer[t])
+        self.screen_buffer[t] = self._fetch_grayscale_observation(self.screen_buffer[t])
+	
+        
+
 
     # Pool the last two observations.
     observation = self._pool_and_resize()
@@ -365,7 +371,8 @@ class AtariPreprocessing(object):
     Returns:
       observation: numpy array, the current observation in grayscale.
     """
-    self.environment.ale.getScreenGrayscale(output)
+    output = self.environment.getScreenGrayscale(output)
+
     return output
 
   def _pool_and_resize(self):
