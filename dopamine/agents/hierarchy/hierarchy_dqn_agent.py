@@ -72,7 +72,7 @@ def identity_epsilon(unused_decay_period, unused_step, unused_warmup_steps,
 
 
 @gin.configurable
-class DQNAgent(object):
+class HierarchyDQNAgent(object):
   """An implementation of the DQN agent."""
   # EDIT - add replay as argument
   def __init__(self,
@@ -336,7 +336,7 @@ class DQNAgent(object):
     Returns:
       int, the selected action.
     """
-    self._reset_state()
+    #self._reset_state()
     self._record_observation(observation)
 
     if not self.eval_mode:
@@ -345,7 +345,7 @@ class DQNAgent(object):
     self.action = self._select_action()
     return self.action
 
-  def step(self, reward, observation):
+  def step(self, reward, observation, last_action ):
     """Records the most recent transition and returns the agent's next action.
 
     We store the observation of the last time step since we want to store it
@@ -359,12 +359,13 @@ class DQNAgent(object):
       int, the selected action.
     """
 
+    
+    
+    self._record_observation(observation) #effect only self.state
     self._last_observation = self._observation
     
-#     self._record_observation(observation) #effect only self.state
-
     if not self.eval_mode:
-#       self._store_transition(self._last_observation, self.action, reward, False)
+      self._store_transition(self._last_observation, last_action, reward, False)
       self._train_step()
 
     self.action = self._select_action()
@@ -455,8 +456,8 @@ class DQNAgent(object):
     #plt.show()
 
     # Swap out the oldest frame with the current frame.
-    self.state = np.roll(self.state, -1, axis=-1)
-    self.state[0, ..., -1] = self._observation
+    #self.state = np.roll(self.state, -1, axis=-1)
+    #self.state[0, ..., -1] = self._observation
 
   def _store_transition(self, last_observation, action, reward, is_terminal):
     """Stores an experienced transition.

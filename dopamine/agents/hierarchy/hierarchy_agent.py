@@ -32,7 +32,7 @@ import tensorflow as tf
 import gin.tf
 
 # EDIT - import dqn
-from dopamine.agents.dqn import dqn_agent
+from dopamine.agents.hierarchy import hierarchy_dqn_agent
 
 slim = tf.contrib.slim
 
@@ -189,6 +189,7 @@ class HierarchyAgent(object):
       self.state_ph = tf.placeholder(self.observation_dtype, state_shape,
                                      name='state_ph')
       self._replay = self._build_replay_buffer(use_staging)
+      self._replay_sub_agents = self._build_replay_buffer(use_staging)
 
       self._build_networks()
 
@@ -209,7 +210,8 @@ class HierarchyAgent(object):
     # EDIT - initialize dqn agent and set its replay buffer
     self.agent_list = [] 
     
-    self.agent_list.append( dqn_agent.DQNAgent(sess, num_actions=num_actions,summary_writer=summary_writer) )
+    self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
+                                                                  summary_writer=summary_writer, replay = self._replay_sub_agents ) )
     self.num_simpe_actions = self.num_actions
     self.num_actions = self.num_actions + len(self.agent_list)
 
@@ -351,9 +353,10 @@ class HierarchyAgent(object):
       self._train_step()
 
     self.action = self._select_action()
+    self.last_simple_action  = self.action
     if self.action >= self.num_simpe_actions:
-        self.action = self.agent_list[self.action - self.num_simpe_actions]._select_action()
-    return self.action
+        self.last_simple_action  = self.agent_list[self.action - self.num_simpe_actions]._select_action()
+    return self.last_simple_action
     
     """
     # EDIT - call dqn instead
@@ -381,12 +384,21 @@ class HierarchyAgent(object):
     self._record_observation(observation)
 
     if not self.eval_mode:
-      self._store_transition(self._last_observation, self.action, reward, False)
+      self._store_hirarchy_transition(self._last_observation, self.action, reward, False)
       self._train_step()
 
     self.action = self._select_action()
-    if self.action >= self.num_simpe_actions:
-        self.action = self.agent_list[self.action - self.num_simpe_actions]._select_action()
+    
+    if not self.eval_mode and self.action < self.num_simpe_actions :
+      self._store_transition(self._last_observation, self.action, reward, False)
+      self.last_simple_action = self.action
+      print("PRIMITIVE")
+    
+    elif self.action >= self.num_simpe_actions:
+      self.last_simple_action = self.agent_list[self.action - self.num_simpe_actions].step(reward, observation,\
+                                                                                         self.last_simple_action)
+      print("AGENT")
+      return self.last_simple_action
    
     return self.action
     """
@@ -408,7 +420,8 @@ class HierarchyAgent(object):
     """
     
     if not self.eval_mode:
-      self._store_transition(self._observation, self.action, reward, True)
+      self._store_hirarchy_transition(self._observation, self.action, reward, True)
+      self._store_transition(self._observation, self.last_simple_action, reward, True)
     """
     # EDIT - call dqn instead
     
@@ -500,6 +513,25 @@ class HierarchyAgent(object):
     
 
   def _store_transition(self, last_observation, action, reward, is_terminal):
+    """Stores an experienced transition.
+
+    Executes a tf session and executes replay buffer ops in order to store the
+    following tuple in the replay buffer:
+      (last_observation, action, reward, is_terminal).
+
+    Pedantically speaking, this does not actually store an entire transition
+    since the next state is recorded on the following time step.
+
+    Args:
+      last_observation: numpy array, last observation.
+      action: int, the action taken.
+      reward: float, the reward.
+      is_terminal: bool, indicating if the current state is a terminal state.
+    """
+    self._replay_sub_agents.add(last_observation, action, reward, is_terminal)
+    
+  
+  def _store_hirarchy_transition(self, last_observation, action, reward, is_terminal):
     """Stores an experienced transition.
 
     Executes a tf session and executes replay buffer ops in order to store the
