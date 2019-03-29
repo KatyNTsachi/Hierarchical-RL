@@ -327,7 +327,7 @@ class HierarchyDQNAgent(object):
       sync_qt_ops.append(w_target.assign(w_online, use_locking=True))
     return sync_qt_ops
 
-  def begin_episode(self, observation):
+  def begin_episode(self):
     """Returns the agent's first action for this episode.
 
     Args:
@@ -337,15 +337,15 @@ class HierarchyDQNAgent(object):
       int, the selected action.
     """
     #self._reset_state()
-    self._record_observation(observation)
+#     self._record_observation(observation)
 
-    if not self.eval_mode:
-      self._train_step()
+#     if not self.eval_mode:
+#       self._train_step()
 
     self.action = self._select_action()
     return self.action
 
-  def step(self, reward, observation, last_action ):
+  def step(self):
     """Records the most recent transition and returns the agent's next action.
 
     We store the observation of the last time step since we want to store it
@@ -359,14 +359,12 @@ class HierarchyDQNAgent(object):
       int, the selected action.
     """
 
+#     self._record_observation(observation) #effect only self.state
+    #self._last_observation = self._observation
     
-    
-    self._record_observation(observation) #effect only self.state
-    self._last_observation = self._observation
-    
-    if not self.eval_mode:
-      self._store_transition(self._last_observation, last_action, reward, False)
-      self._train_step()
+#     if not self.eval_mode:
+      #self._store_transition(self._last_observation, last_action, reward, False)
+#       self._train_step()
 
     self.action = self._select_action()
     return self.action
@@ -380,8 +378,8 @@ class HierarchyDQNAgent(object):
     Args:
       reward: float, the last reward from the environment.
     """
-    if not self.eval_mode:
-      self._store_transition(self._observation, self.action, reward, True)
+#     if not self.eval_mode:
+#       self._store_transition(self._observation, self.action, reward, True)
 
   def _select_action(self):
     """Select an action from the set of available actions.

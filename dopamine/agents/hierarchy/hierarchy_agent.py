@@ -158,7 +158,9 @@ class HierarchyAgent(object):
     tf.logging.info('\t tf_device: %s', tf_device)
     tf.logging.info('\t use_staging: %s', use_staging)
     tf.logging.info('\t optimizer: %s', optimizer)
-
+    
+    
+    
     self.num_actions = num_actions
     self.observation_shape = tuple(observation_shape)
     self.observation_dtype = observation_dtype
@@ -212,6 +214,7 @@ class HierarchyAgent(object):
     
     self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
                                                                   summary_writer=summary_writer, replay = self._replay_sub_agents ) )
+    
     self.num_simpe_actions = self.num_actions
     self.num_actions = self.num_actions + len(self.agent_list)
 
@@ -349,21 +352,34 @@ class HierarchyAgent(object):
     self._reset_state()
     self._record_observation(observation)
 
+    #if not eval mode 
     if not self.eval_mode:
-      self._train_step()
 
-    self.action = self._select_action()
-    self.last_simple_action  = self.action
-    if self.action >= self.num_simpe_actions:
-        self.last_simple_action  = self.agent_list[self.action - self.num_simpe_actions]._select_action()
-    return self.last_simple_action
+      #train super agent 
+      self._train_step()
     
-    """
-    # EDIT - call dqn instead
-    for agent in self.agent_list:
-        self.action = agent.begin_episode(observation)
-    return self.action
-    """
+      #train all the sub agents 
+      for agent in self.agent_list:
+        agent._train_step()
+    
+    
+    #pick up action 
+    self.action = self._select_action()
+    self.action = self.num_simpe_actions
+    
+    #update agent number 
+    self.activated_agent = 0
+    
+    #update last_simnple_action  
+    self.simple_action = self.action
+    
+    if self.action >= self.num_simpe_actions:
+      self.simple_action = self.agent_list[self.action - self.num_simpe_actions].begin_episode()
+    
+      #update agent number 
+      self.activated_agent = self.action - self.num_simpe_actions + 1
+      
+    return self.simple_action
 
   def step(self, reward, observation):
     """Records the most recent transition and returns the agent's next action.
@@ -380,34 +396,43 @@ class HierarchyAgent(object):
     """
     
     self._last_observation = self._observation
-    
     self._record_observation(observation)
 
+    #if not eval mode 
     if not self.eval_mode:
+        
+      #supre agent  update every step
       self._store_hirarchy_transition(self._last_observation, self.action, reward, False)
+      
+      #regular agent update every step
+      self._store_transition(self._last_observation, self.simple_action, reward, False)
+        
+      #train super agent 
       self._train_step()
-
+    
+      #train all the sub agents 
+      for agent in self.agent_list:
+        agent._train_step()
+    
+    
+    #pick up action 
     self.action = self._select_action()
+    self.action = self.num_simpe_actions
     
-    if not self.eval_mode and self.action < self.num_simpe_actions :
-      self._store_transition(self._last_observation, self.action, reward, False)
-      self.last_simple_action = self.action
-      print("PRIMITIVE")
+    #update agent number 
+    self.activated_agent = 0
     
-    elif self.action >= self.num_simpe_actions:
-      self.last_simple_action = self.agent_list[self.action - self.num_simpe_actions].step(reward, observation,\
-                                                                                         self.last_simple_action)
-      print("AGENT")
-      return self.last_simple_action
-   
-    return self.action
-    """
-    # EDIT - call dqn instead
+    #update last_simnple_action  
+    self.simple_action = self.action
     
-    for agent in self.agent_list:
-        self.action = agent.step(reward, observation)
-    return self.action
-    """
+    if self.action >= self.num_simpe_actions:
+      self.simple_action = self.agent_list[self.action - self.num_simpe_actions].step()
+    
+      #update agent number 
+      self.activated_agent = self.action - self.num_simpe_actions + 1
+      
+    return self.simple_action
+
     
   def end_episode(self, reward):
     """Signals the end of the episode to the agent.
@@ -421,7 +446,7 @@ class HierarchyAgent(object):
     
     if not self.eval_mode:
       self._store_hirarchy_transition(self._observation, self.action, reward, True)
-      self._store_transition(self._observation, self.last_simple_action, reward, True)
+      self._store_transition(self._observation, self.simple_action, reward, True)
     """
     # EDIT - call dqn instead
     

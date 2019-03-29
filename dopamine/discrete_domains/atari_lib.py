@@ -91,6 +91,7 @@ def create_atari_environment(game_name=None, sticky_actions=True):
   Returns:
     An Atari 2600 environment with some standard preprocessing.
   """
+  
   assert game_name is not None
   game_version = 'v0' if sticky_actions else 'v4'
   full_game_name = '{}NoFrameskip-{}'.format(game_name, game_version)
@@ -101,6 +102,9 @@ def create_atari_environment(game_name=None, sticky_actions=True):
   # restoring states.
   env = env.env
   env = AtariPreprocessing(env)
+  
+  print( type(env) )
+
   return env
 
 

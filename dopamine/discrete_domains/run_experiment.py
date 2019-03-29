@@ -282,16 +282,24 @@ class Runner(object):
     Returns:
       The number of steps taken and the total reward.
     """
+    
+    # EDIT-calc and return total_dqn_utilization 
+    
     step_number = 0
     total_reward = 0.
+    num_of_agents = len(self._agent.agent_list) + 1
+    
+    total_dqn_utilization = np.zeros( (num_of_agents,1) )
+    
+    #((step_number-1)/step_number)*total_dqn_utilization + (1/step_number)*
 
     action = self._initialize_episode()
     is_terminal = False
 
     # Keep interacting until we reach a terminal state.
     while True:
+      
       observation, reward, is_terminal = self._run_one_step(action)
-
       total_reward += reward
       step_number += 1
 
@@ -309,10 +317,15 @@ class Runner(object):
         action = self._agent.begin_episode(observation)
       else:
         action = self._agent.step(reward, observation)
-
+        
+      activated_agent = self._agent.activated_agent
+      total_dqn_utilization[activated_agent] += 1
+      
+    total_dqn_utilization = total_dqn_utilization/step_number
+    
     self._end_episode(reward)
 
-    return step_number, total_reward
+    return step_number, total_reward, total_dqn_utilization
 
   def _run_one_phase(self, min_steps, statistics, run_mode_str):
     """Runs the agent/environment loop until a desired number of steps.
@@ -330,16 +343,24 @@ class Runner(object):
       Tuple containing the number of steps taken in this phase (int), the sum of
         returns (float), and the number of episodes performed (int).
     """
+   
     step_count = 0
     num_episodes = 0
     sum_returns = 0.
 
+    
     while step_count < min_steps:
-      episode_length, episode_return = self._run_one_episode()
-      statistics.append({
-          '{}_episode_lengths'.format(run_mode_str): episode_length,
-          '{}_episode_returns'.format(run_mode_str): episode_return
-      })
+      episode_length, episode_return, episode_dqn_utilization = self._run_one_episode()
+      num_of_agents = ( np.shape(episode_dqn_utilization) )[0]
+          
+      # EDIT-add episode_dqn_utilization to statistic
+
+      tmp_dict = {    '{}_episode_dqn_utilization_{:d}'.format(run_mode_str,agent_num):episode_dqn_utilization[agent_num] for agent_num in range(num_of_agents)
+                 }
+      tmp_dict['{}_episode_lengths'.format(run_mode_str)] = episode_length
+      tmp_dict['{}_episode_returns'.format(run_mode_str)] = episode_return
+        
+      statistics.append(tmp_dict)
       step_count += episode_length
       sum_returns += episode_return
       num_episodes += 1
