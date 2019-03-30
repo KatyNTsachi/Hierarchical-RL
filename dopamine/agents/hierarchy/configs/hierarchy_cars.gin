@@ -2,7 +2,7 @@
 import dopamine.discrete_domains.atari_lib
 import dopamine.discrete_domains.run_experiment
 import dopamine.agents.hierarchy.hierarchy_agent
-import dopamine.agents.dqn.dqn_agent
+import dopamine.agents.hierarchy.hierarchy_dqn_agent
 import dopamine.replay_memory.circular_replay_buffer
 import gin.tf.external_configurables
 
@@ -17,16 +17,16 @@ HierarchyAgent.epsilon_decay_period = 1000000  # agent steps
 HierarchyAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
 HierarchyAgent.optimizer = @tf.train.RMSPropOptimizer()
 
-DQNAgent.gamma = 0.99
-DQNAgent.update_horizon = 1
-DQNAgent.min_replay_history = 50000  # agent steps
-DQNAgent.update_period = 1 #4
-DQNAgent.target_update_period = 1000 #10000  # agent steps
-DQNAgent.epsilon_train = 0.01 # 0.1
-DQNAgent.epsilon_eval =  0.001 # 0.05
-DQNAgent.epsilon_decay_period = 1000000  # agent steps
-DQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
-DQNAgent.optimizer = @tf.train.RMSPropOptimizer()
+HDQNAgent.gamma = 0.99
+HDQNAgent.update_horizon = 1
+HDQNAgent.min_replay_history = 50000  # agent steps
+HDQNAgent.update_period = 1 #4
+HDQNAgent.target_update_period = 1000 #10000  # agent steps
+HDQNAgent.epsilon_train = 0.01 # 0.1
+HDQNAgent.epsilon_eval =  0.001 # 0.05
+HDQNAgent.epsilon_decay_period = 1000000  # agent steps
+HDQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
+HDQNAgent.optimizer = @tf.train.RMSPropOptimizer()
 
 tf.train.RMSPropOptimizer.learning_rate = 0.0025 #0.00025
 tf.train.RMSPropOptimizer.decay = 0.95
