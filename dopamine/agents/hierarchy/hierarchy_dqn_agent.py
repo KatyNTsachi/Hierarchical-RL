@@ -341,7 +341,6 @@ class HierarchyDQNAgent(object):
 
 #     if not self.eval_mode:
 #       self._train_step()
-
     self.action = self._select_action()
     return self.action
 
@@ -367,6 +366,8 @@ class HierarchyDQNAgent(object):
 #       self._train_step()
 
     self.action = self._select_action()
+
+    
     return self.action
 
   def end_episode(self, reward):
@@ -398,6 +399,10 @@ class HierarchyDQNAgent(object):
           self.training_steps,
           self.min_replay_history,
           self.epsilon_train)
+    
+
+   
+   
     if random.random() <= epsilon:
       # Choose a random action with probability epsilon.
       return random.randint(0, self.num_actions - 1)

@@ -182,7 +182,8 @@ class HierarchyAgent(object):
     self.optimizer = optimizer
     self.summary_writer = summary_writer
     self.summary_writing_frequency = summary_writing_frequency
-
+    
+    
     with tf.device(tf_device):
       # Create a placeholder for the state input to the DQN network.
       # The last axis indicates the number of consecutive frames stacked.
@@ -430,7 +431,7 @@ class HierarchyAgent(object):
     
       #update agent number 
       self.activated_agent = self.action - self.num_simpe_actions + 1
-      
+    
     return self.simple_action
 
     
