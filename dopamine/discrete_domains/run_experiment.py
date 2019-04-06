@@ -287,9 +287,10 @@ class Runner(object):
     
     step_number = 0
     total_reward = 0.
-    num_of_agents = len(self._agent.agent_list) + 1
-    
-    total_dqn_utilization = np.zeros( (num_of_agents,1) )
+    total_dqn_utilization = np.ones((1,1))
+    if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+      num_of_agents = len(self._agent.agent_list) + 1
+      total_dqn_utilization = np.zeros( (num_of_agents,1) )
     
     #((step_number-1)/step_number)*total_dqn_utilization + (1/step_number)*
 
@@ -317,11 +318,11 @@ class Runner(object):
         action = self._agent.begin_episode(observation)
       else:
         action = self._agent.step(reward, observation)
-        
-      activated_agent = self._agent.activated_agent
-      total_dqn_utilization[activated_agent] += 1
-      
-    total_dqn_utilization = total_dqn_utilization/step_number
+      if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+        activated_agent = self._agent.activated_agent
+        total_dqn_utilization[activated_agent] += 1
+    if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
+      total_dqn_utilization = total_dqn_utilization/step_number
     
     self._end_episode(reward)
 
