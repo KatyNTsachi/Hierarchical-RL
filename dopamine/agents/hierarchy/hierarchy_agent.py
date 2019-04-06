@@ -162,6 +162,7 @@ class HierarchyAgent(object):
     
     
     self.num_actions = num_actions
+    
     self.observation_shape = tuple(observation_shape)
     self.observation_dtype = observation_dtype
     self.stack_size = stack_size
@@ -182,8 +183,8 @@ class HierarchyAgent(object):
     self.optimizer = optimizer
     self.summary_writer = summary_writer
     self.summary_writing_frequency = summary_writing_frequency
-    
-    
+    self.steps_in_every_action = 10
+    self.cumulative_gamma_sub = math.pow( gamma, self.steps_in_every_action )
     with tf.device(tf_device):
       # Create a placeholder for the state input to the DQN network.
       # The last axis indicates the number of consecutive frames stacked.
@@ -193,7 +194,22 @@ class HierarchyAgent(object):
                                      name='state_ph')
       self._replay = self._build_replay_buffer(use_staging)
       self._replay_sub_agents = self._build_replay_buffer(use_staging)
+      
+      # EDIT - initialize dqn agent and set its replay buffer
+      self.agent_list = [] 
 
+      self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
+                                                                    summary_writer=summary_writer,\
+                                                                    replay = self._replay_sub_agents ) )
+  
+      self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
+                                                                    summary_writer=summary_writer,\
+                                                                    replay = self._replay_sub_agents ) )
+
+      self.num_simpe_actions = self.num_actions
+      self.num_actions = self.num_actions + len(self.agent_list)
+
+    
       self._build_networks()
 
       self._train_op = self._build_train_op()
@@ -210,14 +226,11 @@ class HierarchyAgent(object):
     self._observation = None
     self._last_observation = None
     
-    # EDIT - initialize dqn agent and set its replay buffer
-    self.agent_list = [] 
     
-    self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
-                                                                  summary_writer=summary_writer, replay = self._replay_sub_agents ) )
-    
-    self.num_simpe_actions = self.num_actions
-    self.num_actions = self.num_actions + len(self.agent_list)
+        
+    self.sub_agent_counter = 0
+    self.is_sub_agent = False
+    self.accumulated_reward = 0
 
   def _get_network_type(self):
     """Returns the type of the outputs of a Q value network.
@@ -292,6 +305,7 @@ class HierarchyAgent(object):
     # Get the maximum Q-value across the actions dimension.
     replay_next_qt_max = tf.reduce_max(
         self._replay_next_target_net_outputs.q_values, 1)
+
     # Calculate the Bellman target value.
     #   Q_t = R_t + \gamma^N * Q'_t+1
     # where,
@@ -299,7 +313,19 @@ class HierarchyAgent(object):
     #          (or) 0 if S_t is a terminal state,
     # and
     #   N is the update horizon (by default, N=1).
-    return self._replay.rewards + self.cumulative_gamma * replay_next_qt_max * (
+    a = self._replay.actions < self.num_simpe_actions 
+
+    a_not = a==False
+    a     = tf.cast(a, tf.float32)
+    a_not = tf.cast(a_not, tf.float32)
+
+
+    cumulative_gamma     = tf.convert_to_tensor(self.cumulative_gamma , dtype=tf.float32)
+    cumulative_gamma_sub = tf.convert_to_tensor(self.cumulative_gamma_sub , dtype=tf.float32)
+    
+    gamma = a * cumulative_gamma + a_not * cumulative_gamma_sub
+    
+    return self._replay.rewards + gamma * replay_next_qt_max * (
         1. - tf.cast(self._replay.terminals, tf.float32))
 
   def _build_train_op(self):
@@ -356,32 +382,40 @@ class HierarchyAgent(object):
     #if not eval mode 
     if not self.eval_mode:
 
-      #train super agent 
-      self._train_step()
+        #train super agent 
+        self._train_step()
     
-      #train all the sub agents 
-      for agent in self.agent_list:
-        agent._train_step()
+        #train all the sub agents 
+        for agent in self.agent_list:
+            agent._train_step()
     
     
-    #pick up action 
     self.action = self._select_action()
-    self.action = self.num_simpe_actions
     
-    #update agent number 
-    self.activated_agent = 0
-    
+    #update agent number for display
+    self.activated_agent    = 0
+    self.sub_agent_counter  = 0
+    self.is_sub_agent       = False
+    self.accumulated_reward = 0 
+          
     #update last_simnple_action  
     self.simple_action = self.action
-    
+    # if subagent
     if self.action >= self.num_simpe_actions:
-      self.simple_action = self.agent_list[self.action - self.num_simpe_actions].begin_episode()
+      
+        self.simple_action     = self.agent_list[self.action - self.num_simpe_actions].step()
+        self.sub_agent_counter = 1
+        self.is_sub_agent      = True
+        
+        #update agent number for display
+        self.activated_agent = self.action - self.num_simpe_actions + 1
     
-      #update agent number 
-      self.activated_agent = self.action - self.num_simpe_actions + 1
       
     return self.simple_action
 
+
+
+    
   def step(self, reward, observation):
     """Records the most recent transition and returns the agent's next action.
 
@@ -395,44 +429,106 @@ class HierarchyAgent(object):
     Returns:
       int, the selected action.
     """
-    
     self._last_observation = self._observation
     self._record_observation(observation)
 
+    ####################################################store transition###################################################
+    ####################################################update reward #####################################################
+    ####################################################training agents####################################################
+    #######################################################################################################################
     #if not eval mode 
     if not self.eval_mode:
-        
-      #supre agent  update every step
-      self._store_hirarchy_transition(self._last_observation, self.action, reward, False)
       
-      #regular agent update every step
-      self._store_transition(self._last_observation, self.simple_action, reward, False)
+        # if we are suer agent
+        if self.action < self.num_simpe_actions:
         
-      #train super agent 
-      self._train_step()
+            #update reward
+            self.accumulated_reward  = reward 
+        
+            #update super aget transition 
+            self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
+            
+            #regular agent update every step
+            self._store_transition(self._last_observation, self.simple_action, self.accumulated_reward, False)   
+        
+            #train super agent 
+            self._train_step()
     
-      #train all the sub agents 
-      for agent in self.agent_list:
-        agent._train_step()
+        else:
+        
+            #if sub agent just finished. we need to update all transitions
+            if self.is_sub_agent == False:
+            
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
+        
+                #update super aget transition 
+                self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
+
+                #regular agent update every step
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False)   
+
+                 #train super agent 
+                self._train_step()
+        
+            # we are in the middel of some sub agent, we are waiting for final resaults
+            else: 
+            
+                #regular agent update every step
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False) 
+                
+                #get gamma from agent
+                #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
+                
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
+
+        #train all the sub agents 
+        for agent in self.agent_list:
+            agent._train_step()
+  
+    ####################################################choose action######################################################
+    #######################################################################################################################       
+    # if we are suer agent
+    if self.is_sub_agent == False:
+        
+      self.action = self._select_action()
     
+      #update agent number for display
+      self.activated_agent    = 0
+      self.sub_agent_counter  = 0
+      self.is_sub_agent       = False
+      self.accumulated_reward = 0 
+          
+      #update last_simnple_action  
+      self.simple_action = self.action
+      # if subagent
+      if self.action >= self.num_simpe_actions:
+      
+        self.simple_action     = self.agent_list[self.action - self.num_simpe_actions].step()
+        self.sub_agent_counter = 1
+        self.is_sub_agent      = True
+        
+        #update agent number for display
+        self.activated_agent = self.action - self.num_simpe_actions + 1
     
-    #pick up action 
-    self.action = self._select_action()
-    self.action = self.num_simpe_actions
-    
-    #update agent number 
-    self.activated_agent = 0
-    
-    #update last_simnple_action  
-    self.simple_action = self.action
-    
-    if self.action >= self.num_simpe_actions:
-      self.simple_action = self.agent_list[self.action - self.num_simpe_actions].step()
-    
-      #update agent number 
-      self.activated_agent = self.action - self.num_simpe_actions + 1
+    #if we are in the sub agent
+    else:
+            
+        self.simple_action = self.agent_list[self.action - self.num_simpe_actions].step()
+ 
+        #update counter
+        self.sub_agent_counter = self.sub_agent_counter + 1
+        
+        # if we did all the iteration with this agent
+        if self.sub_agent_counter == self.steps_in_every_action:
+          
+            self.is_sub_agent = False        
     
     return self.simple_action
+
 
     
   def end_episode(self, reward):
@@ -446,8 +542,46 @@ class HierarchyAgent(object):
     """
     
     if not self.eval_mode:
-      self._store_hirarchy_transition(self._observation, self.action, reward, True)
-      self._store_transition(self._observation, self.simple_action, reward, True)
+        # if we are suer agent
+        if self.action < self.num_simpe_actions:
+        
+            #update reward
+            self.accumulated_reward  = reward 
+        
+            #update super aget transition 
+            self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
+            
+            #regular agent update every step
+            self._store_transition(self._last_observation, self.simple_action, self.accumulated_reward, False)   
+   
+        else:
+        
+            #if sub agent just finished. we need to update all transitions
+            if self.is_sub_agent == False:
+            
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
+        
+                #update super aget transition 
+                self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
+
+                #regular agent update every step
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False)   
+
+            # we are in the middel of some sub agent, we are waiting for final resaults
+            else: 
+            
+                #regular agent update every step
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False) 
+                
+                #get gamma from agent
+                #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
+                
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
+    
     """
     # EDIT - call dqn instead
     

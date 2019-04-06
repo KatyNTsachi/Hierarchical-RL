@@ -22,7 +22,7 @@ tf.train.RMSPropOptimizer.momentum = 0.0
 tf.train.RMSPropOptimizer.epsilon = 0.00001
 tf.train.RMSPropOptimizer.centered = True
 
-atari_lib.create_atari_environment.game_name = 'cars'
+atari_lib.create_atari_environment.game_name = 'Pong'
 # Deterministic ALE version used in the DQN Nature paper (Mnih et al., 2015).
 atari_lib.create_atari_environment.sticky_actions = False
 create_agent.agent_name = 'dqn'
