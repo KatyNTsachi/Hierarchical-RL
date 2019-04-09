@@ -287,11 +287,13 @@ class Runner(object):
     
     step_number = 0
     total_reward = 0.
-    total_dqn_utilization = np.ones((1,1))
+    total_dqn_utilization = [1.]
+
     if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-      num_of_agents = len(self._agent.agent_list) + 1
-      total_dqn_utilization = np.zeros( (num_of_agents,1) )
-    
+        num_of_agents = len(self._agent.agent_list) + 1
+        num_of_actions = self._agent.num_actions 
+        total_dqn_utilization = np.zeros( (num_of_agents,1) )
+        action_hist_of_agent  = np.zeros( (num_of_agents,num_of_actions) )
     #((step_number-1)/step_number)*total_dqn_utilization + (1/step_number)*
 
     action = self._initialize_episode()
@@ -300,33 +302,40 @@ class Runner(object):
     # Keep interacting until we reach a terminal state.
     while True:
       
-      observation, reward, is_terminal = self._run_one_step(action)
-      total_reward += reward
-      step_number += 1
+        observation, reward, is_terminal = self._run_one_step(action)
+        total_reward += reward
+        step_number += 1
 
-      # Perform reward clipping.
-      reward = np.clip(reward, -10000, 10000)
+        # Perform reward clipping.
+        reward = np.clip(reward, -10000, 10000)
 
-      if (self._environment.game_over or
-          step_number == self._max_steps_per_episode):
-        # Stop the run loop once we reach the true end of episode.
-        break
-      elif is_terminal:
-        # If we lose a life but the episode is not over, signal an artificial
-        # end of episode to the agent.
-        self._agent.end_episode(reward)
-        action = self._agent.begin_episode(observation)
-      else:
-        action = self._agent.step(reward, observation)
-      if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-        activated_agent = self._agent.activated_agent
-        total_dqn_utilization[activated_agent] += 1
+        if (self._environment.game_over or
+            step_number == self._max_steps_per_episode):
+            # Stop the run loop once we reach the true end of episode.
+            break
+       
+        elif is_terminal:
+            # If we lose a life but the episode is not over, signal an artificial
+            # end of episode to the agent.
+            self._agent.end_episode(reward)
+            action = self._agent.begin_episode(observation)
+        
+        else:
+            action = self._agent.step(reward, observation)
+        
+        if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+            activated_agent = self._agent.activated_agent
+            total_dqn_utilization[activated_agent] += 1
+            action_hist_of_agent[activated_agent][self._agent.simple_action] += 1
+            
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
-      total_dqn_utilization = total_dqn_utilization/step_number
+        total_dqn_utilization = total_dqn_utilization/step_number
     
     self._end_episode(reward)
 
-    return step_number, total_reward, total_dqn_utilization
+    return step_number, total_reward, total_dqn_utilization, action_hist_of_agent
+
+
 
   def _run_one_phase(self, min_steps, statistics, run_mode_str):
     """Runs the agent/environment loop until a desired number of steps.
@@ -351,26 +360,35 @@ class Runner(object):
 
     
     while step_count < min_steps:
-      episode_length, episode_return, episode_dqn_utilization = self._run_one_episode()
-      num_of_agents = ( np.shape(episode_dqn_utilization) )[0]
+        episode_length, episode_return, episode_dqn_utilization, action_hist_of_agent = self._run_one_episode()
+        num_of_agents = ( np.shape(episode_dqn_utilization) )[0]
           
-      # EDIT-add episode_dqn_utilization to statistic
+        # EDIT-add episode_dqn_utilization to statistic
 
-      tmp_dict = {    '{}_episode_dqn_utilization_{:d}'.format(run_mode_str,agent_num):episode_dqn_utilization[agent_num] for agent_num in range(num_of_agents)
-                 }
-      tmp_dict['{}_episode_lengths'.format(run_mode_str)] = episode_length
-      tmp_dict['{}_episode_returns'.format(run_mode_str)] = episode_return
+        tmp_dict = {    '{}_episode_dqn_utilization_{:d}'.format(run_mode_str,agent_num):episode_dqn_utilization[agent_num]\
+                    for agent_num in range(num_of_agents)
+                   }
         
-      statistics.append(tmp_dict)
-      step_count += episode_length
-      sum_returns += episode_return
-      num_episodes += 1
-      # We use sys.stdout.write instead of tf.logging so as to flush frequently
-      # without generating a line break.
-      sys.stdout.write('Steps executed: {} '.format(step_count) +
-                       'Episode length: {} '.format(episode_length) +
-                       'Return: {}\r'.format(episode_return))
-      sys.stdout.flush()
+        tmp_dict['{}_episode_lengths'.format(run_mode_str)] = episode_length
+        tmp_dict['{}_episode_returns'.format(run_mode_str)] = episode_return
+        
+        tmp_dict1 = {}
+        for agent in range( np.shape(action_hist_of_agent)[0] ):
+            for action in range( np.shape(action_hist_of_agent)[1] ):
+                tmp_dict1['{}_agent_{:d}action_{:d}_hist'.format(run_mode_str,agent,action)] =\
+                                                          action_hist_of_agent[agent][action]
+        
+        statistics.append(tmp_dict)
+        statistics.append(tmp_dict1)
+        step_count += episode_length
+        sum_returns += episode_return
+        num_episodes += 1
+        # We use sys.stdout.write instead of tf.logging so as to flush frequently
+        # without generating a line break.
+        sys.stdout.write('Steps executed: {} '.format(step_count) +
+                         'Episode length: {} '.format(episode_length) +
+                         'Return: {}\r'.format(episode_return))
+        sys.stdout.flush()
     return step_count, sum_returns, num_episodes
 
   def _run_train_phase(self, statistics):

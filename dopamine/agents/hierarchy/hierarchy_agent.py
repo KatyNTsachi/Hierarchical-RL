@@ -183,7 +183,7 @@ class HierarchyAgent(object):
     self.optimizer = optimizer
     self.summary_writer = summary_writer
     self.summary_writing_frequency = summary_writing_frequency
-    self.steps_in_every_action = 10
+    self.steps_in_every_action = 20
     self.cumulative_gamma_sub = math.pow( gamma, self.steps_in_every_action )
     with tf.device(tf_device):
       # Create a placeholder for the state input to the DQN network.
@@ -200,11 +200,13 @@ class HierarchyAgent(object):
 
       self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
                                                                     summary_writer=summary_writer,\
-                                                                    replay = self._replay_sub_agents ) )
+                                                                    replay = self._replay_sub_agents))
+                                                                    #gamma = 0.94) )
   
-      self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
-                                                                    summary_writer=summary_writer,\
-                                                                    replay = self._replay_sub_agents ) )
+      #self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
+      #                                                                summary_writer=summary_writer,\
+      #                                                                 replay = self._replay_sub_agents,\
+      #                                                                gamma = 0.9) )
 
       self.num_simpe_actions = self.num_actions
       self.num_actions = self.num_actions + len(self.agent_list)
