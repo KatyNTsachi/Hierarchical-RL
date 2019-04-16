@@ -183,7 +183,7 @@ class HierarchyAgent(object):
     self.optimizer = optimizer
     self.summary_writer = summary_writer
     self.summary_writing_frequency = summary_writing_frequency
-    self.steps_in_every_action = 20
+    self.steps_in_every_action = 10
     self.cumulative_gamma_sub = math.pow( gamma, self.steps_in_every_action )
     with tf.device(tf_device):
       # Create a placeholder for the state input to the DQN network.
@@ -198,15 +198,20 @@ class HierarchyAgent(object):
       # EDIT - initialize dqn agent and set its replay buffer
       self.agent_list = [] 
 
-      self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
-                                                                    summary_writer=summary_writer,\
-                                                                    replay = self._replay_sub_agents))
-                                                                    #gamma = 0.94) )
+      self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
+                                                                     summary_writer=summary_writer,\
+                                                                     replay = self._replay_sub_agents,\
+                                                                     gamma = 0.94) )
   
-      #self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent(sess, num_actions=num_actions,\
-      #                                                                summary_writer=summary_writer,\
-      #                                                                 replay = self._replay_sub_agents,\
-      #                                                                gamma = 0.9) )
+      self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
+                                                                     summary_writer=summary_writer,\
+                                                                     replay = self._replay_sub_agents,\
+                                                                     gamma = 0.9) )
+
+      self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
+                                                                     summary_writer=summary_writer,\
+                                                                     replay = self._replay_sub_agents,\
+                                                                     gamma = 0.85) )
 
       self.num_simpe_actions = self.num_actions
       self.num_actions = self.num_actions + len(self.agent_list)
@@ -471,7 +476,7 @@ class HierarchyAgent(object):
                 # we enter reward and *not* self.accumulated_reward
                 self._store_transition(self._last_observation, self.simple_action, reward, False)   
 
-                 #train super agent 
+                #train super agent 
                 self._train_step()
         
             # we are in the middel of some sub agent, we are waiting for final resaults
@@ -496,25 +501,25 @@ class HierarchyAgent(object):
     # if we are suer agent
     if self.is_sub_agent == False:
         
-      self.action = self._select_action()
+        self.action = self._select_action()
     
-      #update agent number for display
-      self.activated_agent    = 0
-      self.sub_agent_counter  = 0
-      self.is_sub_agent       = False
-      self.accumulated_reward = 0 
-          
-      #update last_simnple_action  
-      self.simple_action = self.action
-      # if subagent
-      if self.action >= self.num_simpe_actions:
-      
-        self.simple_action     = self.agent_list[self.action - self.num_simpe_actions].step()
-        self.sub_agent_counter = 1
-        self.is_sub_agent      = True
-        
         #update agent number for display
-        self.activated_agent = self.action - self.num_simpe_actions + 1
+        self.activated_agent    = 0
+        self.sub_agent_counter  = 0
+        self.is_sub_agent       = False
+        self.accumulated_reward = 0 
+          
+        #update last_simnple_action  
+        self.simple_action = self.action
+        # if subagent
+        if self.action >= self.num_simpe_actions:
+      
+            self.simple_action     = self.agent_list[self.action - self.num_simpe_actions].step()
+            self.sub_agent_counter = 1
+            self.is_sub_agent      = True
+        
+            #update agent number for display
+            self.activated_agent = self.action - self.num_simpe_actions + 1
     
     #if we are in the sub agent
     else:

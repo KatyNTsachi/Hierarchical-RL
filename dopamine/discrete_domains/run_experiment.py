@@ -298,14 +298,14 @@ class Runner(object):
 
     action = self._initialize_episode()
     is_terminal = False
-
+    complex_action_counter = 0 
     # Keep interacting until we reach a terminal state.
     while True:
       
         observation, reward, is_terminal = self._run_one_step(action)
         total_reward += reward
         step_number += 1
-
+        
         # Perform reward clipping.
         reward = np.clip(reward, -10000, 10000)
 
@@ -325,11 +325,20 @@ class Runner(object):
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
             activated_agent = self._agent.activated_agent
-            total_dqn_utilization[activated_agent] += 1
+            
+            sum_to_add = 1
+            if activated_agent > 0:
+                sum_to_add = 1/self._agent.steps_in_every_action
+
+            total_dqn_utilization[activated_agent] += sum_to_add
+            complex_action_counter += sum_to_add
+            
             action_hist_of_agent[activated_agent][self._agent.simple_action] += 1
+        else:       
+            complex_action_counter += 1
             
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
-        total_dqn_utilization = total_dqn_utilization/step_number
+        total_dqn_utilization = total_dqn_utilization/complex_action_counter
     
     self._end_episode(reward)
 
