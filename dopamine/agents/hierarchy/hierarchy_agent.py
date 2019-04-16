@@ -201,21 +201,21 @@ class HierarchyAgent(object):
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
                                                                            replay = self._replay_sub_agents,\
-                                                                           gamma = 0.94) )
+                                                                           gamma = 0.99) )
+
+            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
+                                                                           summary_writer=summary_writer,\
+                                                                           replay = self._replay_sub_agents,\
+                                                                           gamma = 0.95) )
 
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
                                                                            replay = self._replay_sub_agents,\
                                                                            gamma = 0.9) )
 
-            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
-                                                                           summary_writer=summary_writer,\
-                                                                           replay = self._replay_sub_agents,\
-                                                                           gamma = 0.85) )
-
             self.num_simpe_actions = self.num_actions
             #self.num_actions = self.num_actions + len(self.agent_list)
-            self.num_actions = self.num_actions + len(self.agent_list)
+            self.num_actions = len(self.agent_list)
 
 
             self._build_networks()
@@ -408,15 +408,13 @@ class HierarchyAgent(object):
 
         #update last_simnple_action  
         self.simple_action = self.action
-        # if subagent
-        if self.action >= self.num_simpe_actions:
 
-            self.simple_action     = self.agent_list[self.action - self.num_simpe_actions].step()
-            self.sub_agent_counter = 1
-            self.is_sub_agent      = True
+        self.simple_action     = self.agent_list[ self.action ].step()
+        self.sub_agent_counter = 1
+        self.is_sub_agent      = True
 
-            #update agent number for display
-            self.activated_agent = self.action - self.num_simpe_actions + 1
+        #update agent number for display
+        self.activated_agent = self.action 
 
 
         return self.simple_action
@@ -446,52 +444,35 @@ class HierarchyAgent(object):
         #######################################################################################################################
         #if not eval mode 
         if not self.eval_mode:
+            
+            #if sub agent just finished. we need to update all transitions
+            if self.is_sub_agent == False:
 
-            # if we are suer agent
-            if self.action < self.num_simpe_actions:
-
-                #update reward
-                self.accumulated_reward  = reward 
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
 
                 #update super aget transition 
                 self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
 
                 #regular agent update every step
-                self._store_transition(self._last_observation, self.simple_action, self.accumulated_reward, False)   
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False)   
 
                 #train super agent 
                 self._train_step()
 
-            else:
+            # we are in the middel of some sub agent, we are waiting for final resaults
+            else: 
 
-                #if sub agent just finished. we need to update all transitions
-                if self.is_sub_agent == False:
+                #regular agent update every step
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False) 
 
-                    #calc the accumulated reward
-                    self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
+                #get gamma from agent
+                #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
 
-                    #update super aget transition 
-                    self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
-
-                    #regular agent update every step
-                    # we enter reward and *not* self.accumulated_reward
-                    self._store_transition(self._last_observation, self.simple_action, reward, False)   
-
-                    #train super agent 
-                    self._train_step()
-
-                # we are in the middel of some sub agent, we are waiting for final resaults
-                else: 
-
-                    #regular agent update every step
-                    # we enter reward and *not* self.accumulated_reward
-                    self._store_transition(self._last_observation, self.simple_action, reward, False) 
-
-                    #get gamma from agent
-                    #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
-
-                    #calc the accumulated reward
-                    self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
 
             #train all the sub agents 
             for agent in self.agent_list:
@@ -510,22 +491,18 @@ class HierarchyAgent(object):
             self.is_sub_agent       = False
             self.accumulated_reward = 0 
 
-            #update last_simnple_action  
-            self.simple_action = self.action
             # if subagent
-            if self.action >= self.num_simpe_actions:
+            self.simple_action     = self.agent_list[ self.action ].step()
+            self.sub_agent_counter = 1
+            self.is_sub_agent      = True
 
-                self.simple_action     = self.agent_list[self.action - self.num_simpe_actions].step()
-                self.sub_agent_counter = 1
-                self.is_sub_agent      = True
-
-                #update agent number for display
-                self.activated_agent = self.action - self.num_simpe_actions + 1
+            #update agent number for display
+            self.activated_agent = self.action 
 
         #if we are in the sub agent
         else:
 
-            self.simple_action = self.agent_list[self.action - self.num_simpe_actions].step()
+            self.simple_action = self.agent_list[ self.action ].step()
 
             #update counter
             self.sub_agent_counter = self.sub_agent_counter + 1
@@ -550,45 +527,32 @@ class HierarchyAgent(object):
         """
 
         if not self.eval_mode:
-            # if we are suer agent
-            if self.action < self.num_simpe_actions:
 
-                #update reward
-                self.accumulated_reward  = reward 
+            #if sub agent just finished. we need to update all transitions
+            if self.is_sub_agent == False:
+
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
 
                 #update super aget transition 
                 self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
 
                 #regular agent update every step
-                self._store_transition(self._last_observation, self.simple_action, self.accumulated_reward, False)   
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False)   
 
-            else:
+            # we are in the middel of some sub agent, we are waiting for final resaults
+            else: 
 
-                #if sub agent just finished. we need to update all transitions
-                if self.is_sub_agent == False:
+                #regular agent update every step
+                # we enter reward and *not* self.accumulated_reward
+                self._store_transition(self._last_observation, self.simple_action, reward, False) 
 
-                    #calc the accumulated reward
-                    self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
+                #get gamma from agent
+                #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
 
-                    #update super aget transition 
-                    self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
-
-                    #regular agent update every step
-                    # we enter reward and *not* self.accumulated_reward
-                    self._store_transition(self._last_observation, self.simple_action, reward, False)   
-
-                # we are in the middel of some sub agent, we are waiting for final resaults
-                else: 
-
-                    #regular agent update every step
-                    # we enter reward and *not* self.accumulated_reward
-                    self._store_transition(self._last_observation, self.simple_action, reward, False) 
-
-                    #get gamma from agent
-                    #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
-
-                    #calc the accumulated reward
-                    self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
+                #calc the accumulated reward
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
 
         """
         # EDIT - call dqn instead

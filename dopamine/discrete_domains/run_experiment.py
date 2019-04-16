@@ -290,8 +290,8 @@ class Runner(object):
     total_dqn_utilization = [1.]
 
     if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-        num_of_agents = len(self._agent.agent_list) + 1
-        num_of_actions = self._agent.num_actions 
+        num_of_agents = len(self._agent.agent_list)
+        num_of_actions = np.max( (self._agent.num_actions ,  self._agent.num_simpe_actions) )
         total_dqn_utilization = np.zeros( (num_of_agents,1) )
         action_hist_of_agent  = np.zeros( (num_of_agents,num_of_actions) )
     #((step_number-1)/step_number)*total_dqn_utilization + (1/step_number)*
@@ -327,8 +327,7 @@ class Runner(object):
             activated_agent = self._agent.activated_agent
             
             sum_to_add = 1
-            if activated_agent > 0:
-                sum_to_add = 1/self._agent.steps_in_every_action
+            sum_to_add = 1/self._agent.steps_in_every_action
 
             total_dqn_utilization[activated_agent] += sum_to_add
             complex_action_counter += sum_to_add
