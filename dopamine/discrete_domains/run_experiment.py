@@ -148,7 +148,8 @@ class Runner(object):
                num_iterations=200,
                training_steps=250000,
                evaluation_steps=125000,
-               max_steps_per_episode=27000):
+               max_steps_per_episode=27000,
+               epoc_in_pretrain=10):
     """Initialize the Runner object in charge of running a full experiment.
 
     Args:
@@ -187,16 +188,23 @@ class Runner(object):
     self._summary_writer = tf.summary.FileWriter(self._base_dir)
 
     self._environment = create_environment_fn()
+    
+    #options for GPU memory  
+    my_config = tf.ConfigProto(allow_soft_placement = True)
+    my_config.gpu_options.per_process_gpu_memory_fraction = 0.5
+
+    
     # Set up a session and initialize variables.
-    self._sess = tf.Session('',
-                            config=tf.ConfigProto(allow_soft_placement=True))
+    self._sess = tf.Session('',config = my_config )
+    
     self._agent = create_agent_fn(self._sess, self._environment,
                                   summary_writer=self._summary_writer)
     self._summary_writer.add_graph(graph=tf.get_default_graph())
     self._sess.run(tf.global_variables_initializer())
 
     self._initialize_checkpointer_and_maybe_resume(checkpoint_file_prefix)
-
+    self.epoc_in_pretrain = epoc_in_pretrain
+    
   def _create_directories(self):
     """Create necessary sub-directories."""
     self._checkpoint_dir = os.path.join(self._base_dir, 'checkpoints')
@@ -276,7 +284,7 @@ class Runner(object):
     """
     self._agent.end_episode(reward)
 
-  def _run_one_episode(self):
+  def _run_one_episode(self,statistics):
     """Executes a full trajectory of the agent interacting with the environment.
 
     Returns:
@@ -288,6 +296,7 @@ class Runner(object):
     step_number = 0
     total_reward = 0.
     total_dqn_utilization = [1.]
+    action_hist_of_agent =  np.zeros( (1,1) ) 
 
     if type( self._agent ) is hierarchy_agent.HierarchyAgent:
         num_of_agents = len(self._agent.agent_list)
@@ -333,6 +342,10 @@ class Runner(object):
             complex_action_counter += sum_to_add
             
             action_hist_of_agent[activated_agent][self._agent.simple_action] += 1
+            """ store chosen agent every super agent step """
+            #tmp_dict = { '{}_chosen_agent'.format('train'):activated_agent }
+            #statistics.append(tmp_dict)
+            
         else:       
             complex_action_counter += 1
             
@@ -368,7 +381,7 @@ class Runner(object):
 
     
     while step_count < min_steps:
-        episode_length, episode_return, episode_dqn_utilization, action_hist_of_agent = self._run_one_episode()
+        episode_length, episode_return, episode_dqn_utilization, action_hist_of_agent = self._run_one_episode(statistics)
         num_of_agents = ( np.shape(episode_dqn_utilization) )[0]
           
         # EDIT-add episode_dqn_utilization to statistic
@@ -522,17 +535,23 @@ class Runner(object):
       self._checkpointer.save_checkpoint(iteration, experiment_data)
 
   def run_experiment(self):
-    """Runs a full experiment, spread over multiple iterations."""
-    tf.logging.info('Beginning training...')
-    if self._num_iterations <= self._start_iteration:
-      tf.logging.warning('num_iterations (%d) < start_iteration(%d)',
-                         self._num_iterations, self._start_iteration)
-      return
-
-    for iteration in range(self._start_iteration, self._num_iterations):
-      statistics = self._run_one_iteration(iteration)
-      self._log_experiment(iteration, statistics)
-      self._checkpoint_experiment(iteration)
+        """Runs a full experiment, spread over multiple iterations."""
+        tf.logging.info('Beginning training...')
+        if self._num_iterations <= self._start_iteration:
+            tf.logging.warning('num_iterations (%d) < start_iteration(%d)',
+                               self._num_iterations, self._start_iteration)
+            return
+        started_hierarchy = False
+        for iteration in range(self._start_iteration, self._num_iterations):
+        
+            if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+                if not started_hierarchy and iteration == self.epoc_in_pretrain:
+                    self._agent.start_heirarchy_learning = True
+                    started_hierarchy = True
+            
+            statistics = self._run_one_iteration(iteration)
+            self._log_experiment(iteration, statistics)
+            self._checkpoint_experiment(iteration)
 
 
 @gin.configurable

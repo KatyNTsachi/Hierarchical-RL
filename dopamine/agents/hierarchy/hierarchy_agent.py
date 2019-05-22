@@ -104,7 +104,8 @@ class HierarchyAgent(object):
                    epsilon=0.00001,
                    centered=True),
                summary_writer=None,
-               summary_writing_frequency=500):
+               summary_writing_frequency=500,
+               steps_in_every_action = 10):
         """Initializes the agent and constructs the components of its graph.
 
         Args:
@@ -183,7 +184,7 @@ class HierarchyAgent(object):
         self.optimizer = optimizer
         self.summary_writer = summary_writer
         self.summary_writing_frequency = summary_writing_frequency
-        self.steps_in_every_action = 10
+        self.steps_in_every_action = steps_in_every_action
         self.cumulative_gamma_sub = math.pow( gamma, self.steps_in_every_action )
         with tf.device(tf_device):
             # Create a placeholder for the state input to the DQN network.
@@ -239,7 +240,10 @@ class HierarchyAgent(object):
         self.sub_agent_counter = 0
         self.is_sub_agent = False
         self.accumulated_reward = 0
-
+        self.start_heirarchy_learning = False
+        
+        
+        
     def _get_network_type(self):
         """Returns the type of the outputs of a Q value network.
 
@@ -391,7 +395,8 @@ class HierarchyAgent(object):
         if not self.eval_mode:
 
             #train super agent 
-            self._train_step()
+            if self.start_heirarchy_learning:
+                self._train_step()
 
             #train all the sub agents 
             for agent in self.agent_list:
@@ -415,8 +420,7 @@ class HierarchyAgent(object):
 
         #update agent number for display
         self.activated_agent = self.action 
-
-
+        
         return self.simple_action
 
 
@@ -435,6 +439,7 @@ class HierarchyAgent(object):
         Returns:
           int, the selected action.
         """
+        
         self._last_observation = self._observation
         self._record_observation(observation)
 
@@ -447,19 +452,21 @@ class HierarchyAgent(object):
             
             #if sub agent just finished. we need to update all transitions
             if self.is_sub_agent == False:
-
+                
                 #calc the accumulated reward
                 self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
 
                 #update super aget transition 
-                self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
+                if self.start_heirarchy_learning:
+                    self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
                 self._store_transition(self._last_observation, self.simple_action, reward, False)   
 
                 #train super agent 
-                self._train_step()
+                if self.start_heirarchy_learning:
+                    self._train_step()
 
             # we are in the middel of some sub agent, we are waiting for final resaults
             else: 
@@ -480,7 +487,7 @@ class HierarchyAgent(object):
 
         ####################################################choose action######################################################
         #######################################################################################################################       
-        # if we are suer agent
+        # if we are super agent
         if self.is_sub_agent == False:
 
             self.action = self._select_action()
@@ -511,7 +518,8 @@ class HierarchyAgent(object):
             if self.sub_agent_counter == self.steps_in_every_action:
 
                 self.is_sub_agent = False        
-
+                
+        
         return self.simple_action
 
 
@@ -535,7 +543,8 @@ class HierarchyAgent(object):
                 self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
 
                 #update super aget transition 
-                self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
+                if self.start_heirarchy_learning:
+                    self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
@@ -553,7 +562,7 @@ class HierarchyAgent(object):
 
                 #calc the accumulated reward
                 self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
-
+        
         """
         # EDIT - call dqn instead
 
@@ -584,6 +593,7 @@ class HierarchyAgent(object):
             # Choose a random action with probability epsilon.
             return random.randint(0, self.num_actions - 1)
         else:
+            
             # Choose the action with highest Q-value at the current state.
             return self._sess.run(self._q_argmax, {self.state_ph: self.state})
 
