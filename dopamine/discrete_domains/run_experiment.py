@@ -191,7 +191,7 @@ class Runner(object):
     
     #options for GPU memory  
     my_config = tf.ConfigProto(allow_soft_placement = True)
-    my_config.gpu_options.per_process_gpu_memory_fraction = 0.5
+    my_config.gpu_options.per_process_gpu_memory_fraction = 0.1
 
     
     # Set up a session and initialize variables.
@@ -238,17 +238,17 @@ class Runner(object):
     # that we have finished iteration 0 (so we will start from iteration 1).
     latest_checkpoint_version = checkpointer.get_latest_checkpoint_number(
         self._checkpoint_dir)
-    if latest_checkpoint_version >= 0:
-      experiment_data = self._checkpointer.load_checkpoint(
-          latest_checkpoint_version)
-      if self._agent.unbundle(
-          self._checkpoint_dir, latest_checkpoint_version, experiment_data):
-        assert 'logs' in experiment_data
-        assert 'current_iteration' in experiment_data
-        self._logger.data = experiment_data['logs']
-        self._start_iteration = experiment_data['current_iteration'] + 1
-        tf.logging.info('Reloaded checkpoint and will start from iteration %d',
-                        self._start_iteration)
+#     if latest_checkpoint_version >= 0:
+#       experiment_data = self._checkpointer.load_checkpoint(
+#           latest_checkpoint_version)
+#       if self._agent.unbundle(
+#           self._checkpoint_dir, latest_checkpoint_version, experiment_data):
+#         assert 'logs' in experiment_data
+#         assert 'current_iteration' in experiment_data
+#         self._logger.data = experiment_data['logs']
+#         self._start_iteration = experiment_data['current_iteration'] + 1
+#         tf.logging.info('Reloaded checkpoint and will start from iteration %d',
+#                         self._start_iteration)
 
   def _initialize_episode(self):
     """Initialization for a new episode.
@@ -543,7 +543,9 @@ class Runner(object):
             return
         started_hierarchy = False
         for iteration in range(self._start_iteration, self._num_iterations):
-        
+            
+            #start time
+            t0 = time.time()
             if type( self._agent ) is hierarchy_agent.HierarchyAgent:
                 if not started_hierarchy and iteration == self.epoc_in_pretrain:
                     self._agent.start_heirarchy_learning = True
@@ -552,6 +554,16 @@ class Runner(object):
             statistics = self._run_one_iteration(iteration)
             self._log_experiment(iteration, statistics)
             self._checkpoint_experiment(iteration)
+            
+            #end time
+            t1 = time.time()
+            
+            #how log 1 iter takes
+            delta_time = (t1-t0)/60
+            
+            #print it 
+            sys.stdout.write( "*"*100 +"\nTime for one Iter is: {}".format(delta_time) + "\n"+"*"*100+"\n" )
+            sys.stdout.flush()
 
 
 @gin.configurable
