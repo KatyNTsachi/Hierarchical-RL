@@ -194,26 +194,37 @@ class HierarchyAgent(object):
             self.state_ph = tf.placeholder(self.observation_dtype, state_shape,
                                            name='state_ph')
             self._replay = self._build_replay_buffer(use_staging)
-            self._replay_sub_agents = self._build_replay_buffer(use_staging)
+            #self._replay_sub_agents = self._build_replay_buffer(use_staging)
 
             # EDIT - initialize dqn agent and set its replay buffer
             self.agent_list = [] 
 
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
-                                                                           replay = self._replay_sub_agents,\
+                                                                           #replay = self._replay_sub_agents,\
                                                                            gamma = 0.99) )
 
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
-                                                                           replay = self._replay_sub_agents,\
-                                                                           gamma = 0.95) )
+                                                                           #replay = self._replay_sub_agents,\
+                                                                           gamma = 0.8) )
 
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
-                                                                           replay = self._replay_sub_agents,\
-                                                                           gamma = 0.9) )
+                                                                           #replay = self._replay_sub_agents,\
+                                                                           gamma = 0.6) )
 
+            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
+                                                                           summary_writer=summary_writer,\
+                                                                           #replay = self._replay_sub_agents,\
+                                                                           gamma = 0.4) )
+            
+            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
+                                                                           summary_writer=summary_writer,\
+                                                                           #replay = self._replay_sub_agents,\
+                                                                           gamma = 0.2) )
+                
+            
             self.num_simpe_actions = self.num_actions
             #self.num_actions = self.num_actions + len(self.agent_list)
             self.num_actions = len(self.agent_list)
@@ -462,7 +473,7 @@ class HierarchyAgent(object):
 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.simple_action, reward, False)   
+                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)   
 
                 #train super agent 
                 if self.start_heirarchy_learning:
@@ -473,7 +484,7 @@ class HierarchyAgent(object):
 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.simple_action, reward, False) 
+                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False) 
 
                 #get gamma from agent
                 #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
@@ -548,14 +559,14 @@ class HierarchyAgent(object):
 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.simple_action, reward, False)   
+                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)   
 
             # we are in the middel of some sub agent, we are waiting for final resaults
             else: 
 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.simple_action, reward, False) 
+                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False) 
 
                 #get gamma from agent
                 #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
@@ -654,7 +665,7 @@ class HierarchyAgent(object):
 
     
 
-    def _store_transition(self, last_observation, action, reward, is_terminal):
+    def _store_transition(self, last_observation, action, simple_action, reward, is_terminal):
         """Stores an experienced transition.
 
         Executes a tf session and executes replay buffer ops in order to store the
@@ -670,7 +681,7 @@ class HierarchyAgent(object):
           reward: float, the reward.
           is_terminal: bool, indicating if the current state is a terminal state.
         """
-        self._replay_sub_agents.add(last_observation, action, reward, is_terminal)
+        self.agent_list[action]._replay.add(last_observation, simple_action, reward, is_terminal)
     
   
     def _store_hirarchy_transition(self, last_observation, action, reward, is_terminal):
