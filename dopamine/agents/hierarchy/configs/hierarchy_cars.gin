@@ -18,23 +18,23 @@ HierarchyAgent.update_horizon = 1
 # should be greater then sub agent so they learn first, this is used as #warmup steps in linearly_decaying_epsilon. epsilon is a #function of training steps. subagents do 10 times as much training.
 # to get an estimate of number of iterations till epsilonstarts to decay: min_replay_history/training_steps =  80.
 # epsilon of subagents starts to decay at: HierarchyDQNAgent.min_replay_history/(10*training_steps) < 1
-HierarchyAgent.min_replay_history = 200000 
+HierarchyAgent.min_replay_history = 20000 
 HierarchyAgent.update_period = 4
-HierarchyAgent.target_update_period = 40000  # agent steps
-HierarchyAgent.epsilon_train = 0.1
-HierarchyAgent.epsilon_eval = 0.01
-HierarchyAgent.epsilon_decay_period = 4000000    # agent steps
+HierarchyAgent.target_update_period = 8000  # agent steps
+HierarchyAgent.epsilon_train = 0.01
+HierarchyAgent.epsilon_eval = 0.001
+HierarchyAgent.epsilon_decay_period = 250000    # agent steps
 HierarchyAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
 HierarchyAgent.optimizer = @tf.train.RMSPropOptimizer()
 
 HierarchyDQNAgent.gamma = 0.99
 HierarchyDQNAgent.update_horizon = 1
-HierarchyDQNAgent.min_replay_history = 200000  # agent steps
+HierarchyDQNAgent.min_replay_history = 20000  # agent steps
 HierarchyDQNAgent.update_period = 4
-HierarchyDQNAgent.target_update_period = 40000  # agent steps
-HierarchyDQNAgent.epsilon_train = 0.1
-HierarchyDQNAgent.epsilon_eval = 0.01
-HierarchyDQNAgent.epsilon_decay_period = 4000000    # agent steps
+HierarchyDQNAgent.target_update_period = 8000  # agent steps
+HierarchyDQNAgent.epsilon_train = 0.01
+HierarchyDQNAgent.epsilon_eval = 0.001
+HierarchyDQNAgent.epsilon_decay_period = 250000    # agent steps
 HierarchyDQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
 HierarchyDQNAgent.optimizer = @tf.train.RMSPropOptimizer()
 
@@ -53,7 +53,7 @@ Runner.training_steps = 250000  # agent steps
 Runner.evaluation_steps = 125000  # agent steps
 Runner.max_steps_per_episode =  27000  # agent steps
 
-AtariPreprocessing.terminal_on_life_loss = True
+#AtariPreprocessing.terminal_on_life_loss = True
 
 WrappedReplayBuffer.replay_capacity = 1000000
 WrappedReplayBuffer.batch_size = 32

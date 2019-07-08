@@ -198,7 +198,7 @@ class HierarchyAgent(object):
 
             # EDIT - initialize dqn agent and set its replay buffer
             self.agent_list = [] 
-
+            
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
                                                                            #replay = self._replay_sub_agents,\
@@ -207,7 +207,8 @@ class HierarchyAgent(object):
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
                                                                            #replay = self._replay_sub_agents,\
-                                                                           gamma = 0.8) )
+                                                                           gamma = 0.2) )
+            """
 
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
@@ -224,7 +225,7 @@ class HierarchyAgent(object):
                                                                            #replay = self._replay_sub_agents,\
                                                                            gamma = 0.2) )
                 
-            
+            """
             self.num_simpe_actions = self.num_actions
             #self.num_actions = self.num_actions + len(self.agent_list)
             self.num_actions = len(self.agent_list)

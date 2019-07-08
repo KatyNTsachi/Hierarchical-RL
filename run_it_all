@@ -1,0 +1,7 @@
+#!/bin/bash
+
+nohup python -um dopamine.discrete_domains.train   --base_dir=LOGS1   --gin_files='dopamine/agents/hierarchy/configs/hierarchy_cars.gin' > log1 &
+nohup python -um dopamine.discrete_domains.train   --base_dir=LOGS2   --gin_files='dopamine/agents/hierarchy/configs/hierarchy_cars.gin' > log2 &
+nohup python -um dopamine.discrete_domains.train   --base_dir=LOGS3   --gin_files='dopamine/agents/hierarchy/configs/hierarchy_cars.gin' > log3 &
+nohup python -um dopamine.discrete_domains.train   --base_dir=LOGS4   --gin_files='dopamine/agents/hierarchy/configs/hierarchy_cars.gin' > log4 &
+nohup python -um dopamine.discrete_domains.train   --base_dir=LOGS5   --gin_files='dopamine/agents/hierarchy/configs/hierarchy_cars.gin' > log5 &

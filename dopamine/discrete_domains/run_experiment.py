@@ -295,28 +295,41 @@ class Runner(object):
     
     step_number = 0
     total_reward = 0.
+    episode_subagent_return = [1.] 
     total_dqn_utilization = [1.]
-    action_hist_of_agent =  np.zeros( (1,1) ) 
+    action_hist_of_agent =  [0.]
 
     if type( self._agent ) is hierarchy_agent.HierarchyAgent:
         num_of_agents = len(self._agent.agent_list)
         num_of_actions = np.max( (self._agent.num_actions ,  self._agent.num_simpe_actions) )
         total_dqn_utilization = np.zeros( (num_of_agents,1) )
-        action_hist_of_agent  = np.zeros( (num_of_agents,num_of_actions) )
+        action_hist_of_agent  = np.zeros( (num_of_agents, num_of_actions) )
+        episode_subagent_return = np.zeros( (num_of_agents,1) )
     #((step_number-1)/step_number)*total_dqn_utilization + (1/step_number)*
 
     action = self._initialize_episode()
     is_terminal = False
-    complex_action_counter = 0 
+    complex_action_counter = 0
+    if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+        prev_agent = self._agent.activated_agent
+        
+
     # Keep interacting until we reach a terminal state.
     while True:
       
         observation, reward, is_terminal = self._run_one_step(action)
         total_reward += reward
+        if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+            episode_subagent_return[prev_agent] += reward
+            
+            sum_to_add = 1/self._agent.steps_in_every_action
+            total_dqn_utilization[prev_agent] += sum_to_add
+ 
+        
         step_number += 1
         
         # Perform reward clipping.
-        reward = np.clip(reward, -10000, 10000)
+        reward = np.clip(reward, -1, 1)
 
         if (self._environment.game_over or
             step_number == self._max_steps_per_episode):
@@ -334,12 +347,8 @@ class Runner(object):
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
             activated_agent = self._agent.activated_agent
-            
-            sum_to_add = 1
-            sum_to_add = 1/self._agent.steps_in_every_action
+            prev_agent = activated_agent
 
-            total_dqn_utilization[activated_agent] += sum_to_add
-            complex_action_counter += sum_to_add
             
             action_hist_of_agent[activated_agent][self._agent.simple_action] += 1
             """ store chosen agent every super agent step """
@@ -350,11 +359,12 @@ class Runner(object):
             complex_action_counter += 1
             
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
+        episode_subagent_return =  episode_subagent_return/total_dqn_utilization
         total_dqn_utilization = total_dqn_utilization/complex_action_counter
     
     self._end_episode(reward)
 
-    return step_number, total_reward, total_dqn_utilization, action_hist_of_agent
+    return step_number, total_reward, episode_subagent_return, total_dqn_utilization, action_hist_of_agent
 
 
 
@@ -381,7 +391,7 @@ class Runner(object):
 
     
     while step_count < min_steps:
-        episode_length, episode_return, episode_dqn_utilization, action_hist_of_agent = self._run_one_episode(statistics)
+        episode_length, episode_return, avg_episode_subagent_return, episode_dqn_utilization, action_hist_of_agent = self._run_one_episode(statistics)
         num_of_agents = ( np.shape(episode_dqn_utilization) )[0]
           
         # EDIT-add episode_dqn_utilization to statistic
@@ -398,9 +408,13 @@ class Runner(object):
             for action in range( np.shape(action_hist_of_agent)[1] ):
                 tmp_dict1['{}_agent_{:d}action_{:d}_hist'.format(run_mode_str,agent,action)] =\
                                                           action_hist_of_agent[agent][action]
-        
+        tmp_dict2 = {}
+        for agent in range(num_of_agents):
+            tmp_dict2['{}_agent_{:d}_average_episode_returns'.format(run_mode_str,agent)] = avg_episode_subagent_return[agent]
+       
         statistics.append(tmp_dict)
         statistics.append(tmp_dict1)
+        statistics.append(tmp_dict2)
         step_count += episode_length
         sum_returns += episode_return
         num_episodes += 1
