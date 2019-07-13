@@ -207,7 +207,7 @@ class HierarchyAgent(object):
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
                                                                            #replay = self._replay_sub_agents,\
-                                                                           gamma = 0.2) )
+                                                                           gamma = 0.8) )
             """
 
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\

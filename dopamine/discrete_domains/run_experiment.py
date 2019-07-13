@@ -191,7 +191,7 @@ class Runner(object):
     
     #options for GPU memory  
     my_config = tf.ConfigProto(allow_soft_placement = True)
-    my_config.gpu_options.per_process_gpu_memory_fraction = 0.1
+    my_config.gpu_options.per_process_gpu_memory_fraction = 0.2
 
     
     # Set up a session and initialize variables.
@@ -355,7 +355,6 @@ class Runner(object):
             #tmp_dict = { '{}_chosen_agent'.format('train'):activated_agent }
             #statistics.append(tmp_dict)
             
-        else:       
             complex_action_counter += 1
             
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
