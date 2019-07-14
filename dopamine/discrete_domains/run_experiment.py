@@ -191,7 +191,7 @@ class Runner(object):
     
     #options for GPU memory  
     my_config = tf.ConfigProto(allow_soft_placement = True)
-    my_config.gpu_options.per_process_gpu_memory_fraction = 0.2
+    my_config.gpu_options.per_process_gpu_memory_fraction = 0.25
 
     
     # Set up a session and initialize variables.
@@ -358,8 +358,8 @@ class Runner(object):
             complex_action_counter += 1
             
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
-        episode_subagent_return =  episode_subagent_return/total_dqn_utilization
-        total_dqn_utilization = total_dqn_utilization/complex_action_counter
+        episode_subagent_return =  episode_subagent_return / total_dqn_utilization
+        total_dqn_utilization = total_dqn_utilization / complex_action_counter
     
     self._end_episode(reward)
 
@@ -395,7 +395,7 @@ class Runner(object):
           
         # EDIT-add episode_dqn_utilization to statistic
 
-        tmp_dict = {    '{}_episode_dqn_utilization_{:d}'.format(run_mode_str,agent_num):episode_dqn_utilization[agent_num]\
+        tmp_dict = {    '{}_episode_dqn_utilization_{:d}'.format(run_mode_str, agent_num):episode_dqn_utilization[agent_num]\
                     for agent_num in range(num_of_agents)
                    }
         
@@ -405,7 +405,7 @@ class Runner(object):
         tmp_dict1 = {}
         for agent in range( np.shape(action_hist_of_agent)[0] ):
             for action in range( np.shape(action_hist_of_agent)[1] ):
-                tmp_dict1['{}_agent_{:d}action_{:d}_hist'.format(run_mode_str,agent,action)] =\
+                tmp_dict1['{}_agent_{:d}action_{:d}_hist'.format(run_mode_str, agent, action)] =\
                                                           action_hist_of_agent[agent][action]
         tmp_dict2 = {}
         for agent in range(num_of_agents):
