@@ -319,15 +319,13 @@ class Runner(object):
       
         observation, reward, is_terminal = self._run_one_step(action)
         total_reward += reward
-        if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-            episode_subagent_return[prev_agent] += reward
-            
-            sum_to_add = 1/self._agent.steps_in_every_action
-            total_dqn_utilization[prev_agent] += sum_to_add
- 
-        
         step_number += 1
         
+        if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+            
+            episode_subagent_return[prev_agent] += reward
+            total_dqn_utilization[prev_agent] += 1
+ 
         # Perform reward clipping.
         reward = np.clip(reward, -1, 1)
 
@@ -390,13 +388,19 @@ class Runner(object):
 
     
     while step_count < min_steps:
-        episode_length, episode_return, avg_episode_subagent_return, episode_dqn_utilization, action_hist_of_agent = self._run_one_episode(statistics)
+        
+        episode_length,\
+        episode_return,\
+        avg_episode_subagent_return,\
+        episode_dqn_utilization,\
+        action_hist_of_agent = self._run_one_episode(statistics)
+        
         num_of_agents = ( np.shape(episode_dqn_utilization) )[0]
           
         # EDIT-add episode_dqn_utilization to statistic
-
-        tmp_dict = {    '{}_episode_dqn_utilization_{:d}'.format(run_mode_str, agent_num):episode_dqn_utilization[agent_num]\
-                    for agent_num in range(num_of_agents)
+        tmp_dict = { 
+                    '{}_episode_dqn_utilization_{:d}'.format(run_mode_str, agent_num):\
+                    episode_dqn_utilization[agent_num] for agent_num in range(num_of_agents)
                    }
         
         tmp_dict['{}_episode_lengths'.format(run_mode_str)] = episode_length
@@ -406,10 +410,11 @@ class Runner(object):
         for agent in range( np.shape(action_hist_of_agent)[0] ):
             for action in range( np.shape(action_hist_of_agent)[1] ):
                 tmp_dict1['{}_agent_{:d}action_{:d}_hist'.format(run_mode_str, agent, action)] =\
-                                                          action_hist_of_agent[agent][action]
+                                                            action_hist_of_agent[agent][action]
         tmp_dict2 = {}
         for agent in range(num_of_agents):
-            tmp_dict2['{}_agent_{:d}_average_episode_returns'.format(run_mode_str,agent)] = avg_episode_subagent_return[agent]
+            tmp_dict2['{}_agent_{:d}_average_episode_returns'.format(run_mode_str,agent)] = \
+                                                            avg_episode_subagent_return[agent]
        
         statistics.append(tmp_dict)
         statistics.append(tmp_dict1)
