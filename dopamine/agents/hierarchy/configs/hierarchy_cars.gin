@@ -48,7 +48,7 @@ atari_lib.create_atari_environment.game_name = 'Breakout'
 # Deterministic ALE version used in the DQN Nature paper (Mnih et al., 2015).
 atari_lib.create_atari_environment.sticky_actions = True
 create_agent.agent_name = 'hierarchy'
-Runner.num_iterations = 300
+Runner.num_iterations = 600
 Runner.training_steps = 250000  # agent steps
 Runner.evaluation_steps = 125000  # agent steps
 Runner.max_steps_per_episode =  27000  # agent steps

@@ -191,8 +191,8 @@ class Runner(object):
     
     #options for GPU memory  
     my_config = tf.ConfigProto(allow_soft_placement = True)
-    my_config.gpu_options.per_process_gpu_memory_fraction = 0.25
-
+    #my_config.gpu_options.per_process_gpu_memory_fraction = 0.25
+    my_config.gpu_options.per_process_gpu_memory_fraction = 0.9
     
     # Set up a session and initialize variables.
     self._sess = tf.Session('',config = my_config )
@@ -293,7 +293,7 @@ class Runner(object):
     
     # EDIT-calc and return total_dqn_utilization 
     
-    step_number = 0
+    step_number = int(0)
     total_reward = 0.
     episode_subagent_return = [1.] 
     total_dqn_utilization = [1.]
@@ -305,8 +305,8 @@ class Runner(object):
         total_dqn_utilization = np.zeros( (num_of_agents,1) )
         action_hist_of_agent  = np.zeros( (num_of_agents, num_of_actions) )
         episode_subagent_return = np.zeros( (num_of_agents,1) )
-    #((step_number-1)/step_number)*total_dqn_utilization + (1/step_number)*
 
+        
     action = self._initialize_episode()
     is_terminal = False
     complex_action_counter = 0
@@ -318,8 +318,8 @@ class Runner(object):
     while True:
       
         observation, reward, is_terminal = self._run_one_step(action)
-        total_reward += reward
-        step_number += 1
+        total_reward = total_reward + reward
+        step_number = step_number + 1
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
             
@@ -414,7 +414,7 @@ class Runner(object):
         tmp_dict2 = {}
         for agent in range(num_of_agents):
             tmp_dict2['{}_agent_{:d}_average_episode_returns'.format(run_mode_str,agent)] = \
-                                                            avg_episode_subagent_return[agent]
+                                                            avg_episode_subagent_return[agent] * episode_length
        
         statistics.append(tmp_dict)
         statistics.append(tmp_dict1)
