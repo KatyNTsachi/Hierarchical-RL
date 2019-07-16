@@ -293,7 +293,7 @@ class Runner(object):
     
     # EDIT-calc and return total_dqn_utilization 
     
-    step_number = int(0)
+    step_number = 0
     total_reward = 0.
     episode_subagent_return = [1.] 
     total_dqn_utilization = [1.]
@@ -310,9 +310,6 @@ class Runner(object):
     action = self._initialize_episode()
     is_terminal = False
     complex_action_counter = 0
-    if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-        prev_agent = self._agent.activated_agent
-        
 
     # Keep interacting until we reach a terminal state.
     while True:
@@ -323,42 +320,46 @@ class Runner(object):
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
             
-            episode_subagent_return[prev_agent] += reward
-            total_dqn_utilization[prev_agent] += 1
+            activated_agent = self._agent.activated_agent
+            episode_subagent_return[activated_agent] += reward
+            total_dqn_utilization[activated_agent]   += 1
  
         # Perform reward clipping.
         reward = np.clip(reward, -1, 1)
 
-        if (self._environment.game_over or
-            step_number == self._max_steps_per_episode):
+        if (self._environment.game_over or step_number == self._max_steps_per_episode):
+            
             # Stop the run loop once we reach the true end of episode.
             break
        
         elif is_terminal:
+            
             # If we lose a life but the episode is not over, signal an artificial
             # end of episode to the agent.
             self._agent.end_episode(reward)
             action = self._agent.begin_episode(observation)
         
         else:
+            
             action = self._agent.step(reward, observation)
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-            activated_agent = self._agent.activated_agent
-            prev_agent = activated_agent
 
-            
             action_hist_of_agent[activated_agent][self._agent.simple_action] += 1
-            """ store chosen agent every super agent step """
-            #tmp_dict = { '{}_chosen_agent'.format('train'):activated_agent }
-            #statistics.append(tmp_dict)
-            
             complex_action_counter += 1
             
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
-        episode_subagent_return =  episode_subagent_return / total_dqn_utilization
-        total_dqn_utilization = total_dqn_utilization / complex_action_counter
-    
+        
+        for ii in range( np.shape(total_dqn_utilization)[0] ):
+        
+            if total_dqn_utilization[ii] != 0:
+                
+                episode_subagent_return[ii] =  episode_subagent_return[ii] / total_dqn_utilization[ii]
+            
+            else:
+
+                episode_subagent_return[ii] = 0
+                    
     self._end_episode(reward)
 
     return step_number, total_reward, episode_subagent_return, total_dqn_utilization, action_hist_of_agent
@@ -402,7 +403,6 @@ class Runner(object):
                     '{}_episode_dqn_utilization_{:d}'.format(run_mode_str, agent_num):\
                     episode_dqn_utilization[agent_num] for agent_num in range(num_of_agents)
                    }
-        
         tmp_dict['{}_episode_lengths'.format(run_mode_str)] = episode_length
         tmp_dict['{}_episode_returns'.format(run_mode_str)] = episode_return
         
