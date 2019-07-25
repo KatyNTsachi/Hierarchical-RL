@@ -201,31 +201,9 @@ class HierarchyAgent(object):
             
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
-                                                                           #replay = self._replay_sub_agents,\
-                                                                           gamma = 0.99) )
+                                                                           gamma = 0.8) )
 
-            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
-                                                                           summary_writer=summary_writer,\
-                                                                           #replay = self._replay_sub_agents,\
-                                                                           gamma = 0.99) )
-            """
 
-            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
-                                                                           summary_writer=summary_writer,\
-                                                                           #replay = self._replay_sub_agents,\
-                                                                           gamma = 0.6) )
-
-            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
-                                                                           summary_writer=summary_writer,\
-                                                                           #replay = self._replay_sub_agents,\
-                                                                           gamma = 0.4) )
-            
-            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
-                                                                           summary_writer=summary_writer,\
-                                                                           #replay = self._replay_sub_agents,\
-                                                                           gamma = 0.2) )
-                
-            """
             self.num_simpe_actions = self.num_actions
             #self.num_actions = self.num_actions + len(self.agent_list)
             self.num_actions = len(self.agent_list)
@@ -312,13 +290,29 @@ class HierarchyAgent(object):
         Returns:
           A WrapperReplayBuffer object.
         """
+        wrapped_memory = circular_replay_buffer.OutOfGraphReplayBufferContinues(
+                                                          self.observation_shape,
+                                                          self.stack_size,
+                                                          update_horizon = self.update_horizon,
+                                                          gamma = self.gamma,
+                                                          max_sample_attempts = circular_replay_buffer.MAX_SAMPLE_ATTEMPTS,
+                                                          observation_dtype=self.observation_dtype.as_numpy_dtype,
+                                                          extra_storage_types=None,
+                                                          action_shape=(),
+                                                          action_dtype=np.int32,  
+                                                          reward_shape=(),
+                                                          reward_dtype=np.float32)  
+        
+
+             
         return circular_replay_buffer.WrappedReplayBuffer(
             observation_shape=self.observation_shape,
             stack_size=self.stack_size,
             use_staging=use_staging,
             update_horizon=self.update_horizon,
             gamma=self.gamma,
-            observation_dtype=self.observation_dtype.as_numpy_dtype)
+            observation_dtype=self.observation_dtype.as_numpy_dtype,
+            wrapped_memory = wrapped_memory)
 
     def _build_target_q_op(self):
         """Build an op used as a target for the Q-value.

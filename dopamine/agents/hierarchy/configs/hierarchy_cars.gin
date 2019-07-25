@@ -57,3 +57,7 @@ Runner.max_steps_per_episode =  27000  # agent steps
 
 WrappedReplayBuffer.replay_capacity = 1000000
 WrappedReplayBuffer.batch_size = 32
+
+OutOfGraphReplayBufferContinues.replay_capacity = 1000000
+OutOfGraphReplayBufferContinues.batch_size = 32
+

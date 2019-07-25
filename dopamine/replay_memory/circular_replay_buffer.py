@@ -78,6 +78,7 @@ def invalid_range(cursor, replay_capacity, stack_size, update_horizon):
        for i in range(stack_size + update_horizon)])
 
 
+    
 class OutOfGraphReplayBuffer(object):
   """A simple out-of-graph Replay Buffer.
 
@@ -885,3 +886,45 @@ class WrappedReplayBuffer(object):
       suffix: str, the suffix to use in numpy checkpoint files.
     """
     self.memory.load(checkpoint_dir, suffix)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+@gin.configurable  
+class OutOfGraphReplayBufferContinues(OutOfGraphReplayBuffer):
+    
+    def __init__(  self,
+                   observation_shape,
+                   stack_size,
+                   replay_capacity = 1000000,
+                   batch_size = 32,
+                   update_horizon=1,
+                   gamma=0.99,
+                   max_sample_attempts=MAX_SAMPLE_ATTEMPTS,
+                   extra_storage_types=None,
+                   observation_dtype=np.uint8,
+                   action_shape=(),
+                   action_dtype=np.int32,
+                   reward_shape=(),
+                   reward_dtype=np.float32):
+        
+        OutOfGraphReplayBuffer.__init__(   self,
+                                           observation_shape,
+                                           stack_size,
+                                           replay_capacity,
+                                           batch_size,
+                                           update_horizon = update_horizon,
+                                           gamma = gamma,
+                                           max_sample_attempts = max_sample_attempts,
+                                           extra_storage_types = extra_storage_types,
+                                           observation_dtype = observation_dtype,
+                                           action_shape = action_shape,
+                                           action_dtype = action_dtype,
+                                           reward_shape = reward_shape,
+                                           reward_dtype = reward_dtype)
+    
