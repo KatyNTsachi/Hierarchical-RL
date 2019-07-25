@@ -102,7 +102,8 @@ class HierarchyDQNAgent(object):
                    centered=True),
                summary_writer=None,
                summary_writing_frequency=500,
-               replay = None):
+               replay = None,
+               sub_sgent_steps = 10):
     """Initializes the agent and constructs the components of its graph.
 
     Args:
@@ -177,7 +178,8 @@ class HierarchyDQNAgent(object):
     self.optimizer = optimizer
     self.summary_writer = summary_writer
     self.summary_writing_frequency = summary_writing_frequency
-
+    self.sub_sgent_steps = sub_sgent_steps
+    
     with tf.device(tf_device):
       # Create a placeholder for the state input to the DQN network.
       # The last axis indicates the number of consecutive frames stacked.
@@ -262,13 +264,28 @@ class HierarchyDQNAgent(object):
     Returns:
       A WrapperReplayBuffer object.
     """
+    wrapped_memory = circular_replay_buffer.OutOfGraphReplayBufferSubAgent(
+                                       self.observation_shape,
+                                       self.stack_size,
+                                       update_horizon = self.update_horizon,
+                                       gamma = self.gamma,
+                                       max_sample_attempts = circular_replay_buffer.MAX_SAMPLE_ATTEMPTS,
+                                       observation_dtype=self.observation_dtype.as_numpy_dtype,
+                                       extra_storage_types=None,
+                                       action_shape=(),
+                                       action_dtype=np.int32,  
+                                       reward_shape=(),
+                                       reward_dtype=np.float32,
+                                       sub_sgent_steps = self.sub_sgent_steps)  
+
     return circular_replay_buffer.WrappedReplayBuffer(
         observation_shape=self.observation_shape,
         stack_size=self.stack_size,
         use_staging=use_staging,
         update_horizon=self.update_horizon,
         gamma=self.gamma,
-        observation_dtype=self.observation_dtype.as_numpy_dtype)
+        observation_dtype=self.observation_dtype.as_numpy_dtype,
+        wrapped_memory = wrapped_memory)
 
   def _build_target_q_op(self):
     """Build an op used as a target for the Q-value.

@@ -115,7 +115,7 @@ class OutOfGraphReplayBuffer(object):
 
     Args:
       observation_shape: tuple of ints.
-      stack_size: int, number of frames to use in state stack.
+      \: int, number of frames to use in state stack.
       replay_capacity: int, number of transitions to keep in memory.
       batch_size: int.
       update_horizon: int, length of update ('n' in n-step update).
@@ -896,7 +896,7 @@ class WrappedReplayBuffer(object):
     
     
 @gin.configurable  
-class OutOfGraphReplayBufferContinues(OutOfGraphReplayBuffer):
+class OutOfGraphReplayBufferSubAgent(OutOfGraphReplayBuffer):
     
     def __init__(  self,
                    observation_shape,
@@ -911,12 +911,23 @@ class OutOfGraphReplayBufferContinues(OutOfGraphReplayBuffer):
                    action_shape=(),
                    action_dtype=np.int32,
                    reward_shape=(),
-                   reward_dtype=np.float32):
+                   reward_dtype=np.float32,
+                   sub_sgent_steps = 10):
+        
+        
+        self.sub_sgent_steps = sub_sgent_steps
+        
+        #calc replay_capacity
+        self.group_size = self.sub_sgent_steps + stack_size
+        factor = ( self.group_size / self.sub_sgent_steps )
+        new_estimated_size = replay_capacity * factor
+        num_of_groups =  int( new_estimated_size / self.group_size )
+        self.replay_capacity = num_of_groups * self.group_size
         
         OutOfGraphReplayBuffer.__init__(   self,
                                            observation_shape,
                                            stack_size,
-                                           replay_capacity,
+                                           self.replay_capacity,
                                            batch_size,
                                            update_horizon = update_horizon,
                                            gamma = gamma,
@@ -927,4 +938,60 @@ class OutOfGraphReplayBufferContinues(OutOfGraphReplayBuffer):
                                            action_dtype = action_dtype,
                                            reward_shape = reward_shape,
                                            reward_dtype = reward_dtype)
-    
+        
+    def is_valid_transition_sub_agent(self, index):
+        index_in_group = index%self.group_size
+        if index_in_group in range(self._stack_size-1) or index_in_group == (self.group_size-1):
+            return False
+        return True
+        
+    def is_valid_transition(self, index):
+#         return super(OutOfGraphReplayBufferSubAgent, self).is_valid_transition(index)
+        return (super(OutOfGraphReplayBufferSubAgent, self).is_valid_transition(index) and \
+                self.is_valid_transition_sub_agent(index))
+      
+        
+#     def sample_index_batch(self, batch_size):
+#         """Returns a batch of valid indices sampled uniformly.
+
+#         Args:
+#           batch_size: int, number of indices returned.
+
+#         Returns:
+#           list of ints, a batch of valid indices sampled uniformly.
+
+#         Raises:
+#           RuntimeError: If the batch was not constructed after maximum number of
+#             tries.
+#         """
+#         if self.is_full():
+#           # add_count >= self._replay_capacity > self._stack_size
+#           min_id = self.cursor() - self._replay_capacity + self._stack_size - 1
+#           max_id = self.cursor() - self._update_horizon
+#         else:
+#           # add_count < self._replay_capacity
+#           min_id = self._stack_size - 1
+#           max_id = self.cursor() - self._update_horizon
+#           if max_id <= min_id:
+
+#             print('$'*10 + " replay_capacit: ", self._replay_capacity, " stack_size: " , self._stack_size, " update_horizon: ",   self._update_horizon)   
+#             raise RuntimeError('Cannot sample a batch with fewer than stack size '
+#                                '({}) + update_horizon ({}) transitions.'.
+#                                format(self._stack_size, self._update_horizon))
+
+#         indices = []
+#         attempt_count = 0
+#         while (len(indices) < batch_size and
+#                attempt_count < self._max_sample_attempts):
+#           attempt_count += 1
+#           index = np.random.randint(min_id, max_id) % self._replay_capacity
+#           if self.is_valid_transition(index):
+#             indices.append(index)
+#         if len(indices) != batch_size:
+#           raise RuntimeError(
+#               'Max sample attempts: Tried {} times but only sampled {}'
+#               ' valid indices. Batch size is {}'.
+#               format(self._max_sample_attempts, len(indices), batch_size))
+
+#         return indices
+

@@ -201,7 +201,8 @@ class HierarchyAgent(object):
             
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                                            summary_writer=summary_writer,\
-                                                                           gamma = 0.8) )
+                                                                           gamma = 0.8,\
+                                                                           sub_sgent_steps = self.steps_in_every_action) )
 
 
             self.num_simpe_actions = self.num_actions
@@ -290,18 +291,19 @@ class HierarchyAgent(object):
         Returns:
           A WrapperReplayBuffer object.
         """
-        wrapped_memory = circular_replay_buffer.OutOfGraphReplayBufferContinues(
-                                                          self.observation_shape,
-                                                          self.stack_size,
-                                                          update_horizon = self.update_horizon,
-                                                          gamma = self.gamma,
-                                                          max_sample_attempts = circular_replay_buffer.MAX_SAMPLE_ATTEMPTS,
-                                                          observation_dtype=self.observation_dtype.as_numpy_dtype,
-                                                          extra_storage_types=None,
-                                                          action_shape=(),
-                                                          action_dtype=np.int32,  
-                                                          reward_shape=(),
-                                                          reward_dtype=np.float32)  
+        
+#         wrapped_memory = circular_replay_buffer.OutOfGraphReplayBufferSubAgent(
+#                                                self.observation_shape,
+#                                                self.stack_size,
+#                                                update_horizon = self.update_horizon,
+#                                                gamma = self.gamma,
+#                                                max_sample_attempts = circular_replay_buffer.MAX_SAMPLE_ATTEMPTS,
+#                                                observation_dtype=self.observation_dtype.as_numpy_dtype,
+#                                                extra_storage_types=None,
+#                                                action_shape=(),
+#                                                action_dtype=np.int32,  
+#                                                reward_shape=(),
+#                                                reward_dtype=np.float32)  
         
 
              
@@ -312,7 +314,8 @@ class HierarchyAgent(object):
             update_horizon=self.update_horizon,
             gamma=self.gamma,
             observation_dtype=self.observation_dtype.as_numpy_dtype,
-            wrapped_memory = wrapped_memory)
+            #wrapped_memory = wrapped_memory
+        )
 
     def _build_target_q_op(self):
         """Build an op used as a target for the Q-value.
