@@ -941,7 +941,7 @@ class OutOfGraphReplayBufferSubAgent(OutOfGraphReplayBuffer):
         
     def is_valid_transition_sub_agent(self, index):
         index_in_group = index%self.group_size
-        if index_in_group in range(self._stack_size-1) or index_in_group == (self.group_size-1):
+        if index_in_group in range(self._stack_size-1) or index_in_group == (self.group_size - 1):
             return False
         return True
         

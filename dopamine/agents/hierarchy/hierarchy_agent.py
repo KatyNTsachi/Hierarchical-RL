@@ -186,6 +186,10 @@ class HierarchyAgent(object):
         self.summary_writing_frequency = summary_writing_frequency
         self.steps_in_every_action = steps_in_every_action
         self.cumulative_gamma_sub = math.pow( gamma, self.steps_in_every_action )
+        self.need_to_select_action = True
+        self.last_states = []
+        self.counter = 0
+
         with tf.device(tf_device):
             # Create a placeholder for the state input to the DQN network.
             # The last axis indicates the number of consecutive frames stacked.
@@ -200,9 +204,13 @@ class HierarchyAgent(object):
             self.agent_list = [] 
             
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
-                                                                           summary_writer=summary_writer,\
-                                                                           gamma = 0.8,\
-                                                                           sub_sgent_steps = self.steps_in_every_action) )
+                                                       summary_writer=summary_writer,\
+                                                       gamma = 0.99,\
+                                                       sub_sgent_steps = self.steps_in_every_action) )
+            self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
+                                                       summary_writer=summary_writer,\
+                                                       gamma = 0.8,\
+                                                       sub_sgent_steps = self.steps_in_every_action) )
 
 
             self.num_simpe_actions = self.num_actions
@@ -229,7 +237,7 @@ class HierarchyAgent(object):
 
 
         self.sub_agent_counter = 0
-        self.is_sub_agent = False
+        self.is_sub_agent = True
         self.accumulated_reward = 0
         self.start_heirarchy_learning = False
         
@@ -396,7 +404,7 @@ class HierarchyAgent(object):
         Returns:
           int, the selected action.
         """
-
+#         print("$"*100, self.sub_agent_counter)
         self._reset_state()
         self._record_observation(observation)
 
@@ -411,25 +419,51 @@ class HierarchyAgent(object):
             for agent in self.agent_list:
                 agent._train_step()
 
+        if (self.need_to_select_action == True) or self.is_sub_agent == False:
+            
+            if self.need_to_select_action == False:
+                
+#                 print("%"*100, self.counter)
+                #store the current observation in last agent
+                self._store_transition(self._observation, self.action, 0, -1, False) 
+#                 print("%"*15, "store the current observation in: ", self.action)
 
-        self.action = self._select_action()
+            self.action = self._select_action()
+            
+            if self.need_to_select_action == False:
 
-        #update agent number for display
-        self.activated_agent    = 0
-        self.sub_agent_counter  = 0
-        self.is_sub_agent       = False
-        self.accumulated_reward = 0 
+                #store the 3 last observation in current agent
+                self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
+                self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
+                self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
+#                 print("%"*10, "store the 3 last observation in: ", self.action)
 
-        #update last_simnple_action  
-        self.simple_action = self.action
+            #update agent number for display
+            self.activated_agent    = 0
+            self.sub_agent_counter  = 0
 
+            self.is_sub_agent       = True
+            self.accumulated_reward = 0 
+            
+            self.need_to_select_action = False
+            
+            
+
+        #update last_simple_action  
         self.simple_action     = self.agent_list[ self.action ].step()
-        self.sub_agent_counter = 1
-        self.is_sub_agent      = True
-
+        
+        #update counter
+        self.sub_agent_counter = self.sub_agent_counter + 1
+        
+        if self.sub_agent_counter == self.steps_in_every_action:
+            self.is_sub_agent = False        
+            
+        
         #update agent number for display
         self.activated_agent = self.action 
         
+        
+        self.counter = self.counter + 1
         return self.simple_action
 
 
@@ -469,7 +503,7 @@ class HierarchyAgent(object):
                 if self.start_heirarchy_learning:
                     self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
 
-                #regular agent update every step
+                #regular agent update every step30776
                 # we enter reward and *not* self.accumulated_reward
                 self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)   
 
@@ -482,7 +516,7 @@ class HierarchyAgent(object):
 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False) 
+                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)   
 
                 #get gamma from agent
                 #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
@@ -490,21 +524,32 @@ class HierarchyAgent(object):
                 #calc the accumulated reward
                 self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
 
-            #train all the sub agents 
-            for agent in self.agent_list:
-                agent._train_step()
-
+            #train sub agents 
+            self.agent_list[self.action]._train_step()
+            
+        #######################################################################################################################
         ####################################################choose action######################################################
         #######################################################################################################################       
+        
         # if we are super agent
         if self.is_sub_agent == False:
-
+            
+#             print("%"*100, self.counter)
+            #store the current observation in last agent
+            self._store_transition(self._observation, self.action, 0, -1, False) 
+#             print("%"*15, "store the current observation in: ", self.action)
+            
             self.action = self._select_action()
+            
+            #store the 3 last observation in current agent
+            self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
+            self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
+            self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
+#             print("%"*10, "store the 3 last observation in: ", self.action)
 
+            
             #update agent number for display
             self.activated_agent    = 0
-            self.sub_agent_counter  = 0
-            self.is_sub_agent       = False
             self.accumulated_reward = 0 
 
             # if subagent
@@ -528,7 +573,7 @@ class HierarchyAgent(object):
 
                 self.is_sub_agent = False        
                 
-        
+        self.counter = self.counter + 1
         return self.simple_action
 
 
@@ -549,7 +594,7 @@ class HierarchyAgent(object):
             if self.is_sub_agent == False:
 
                 #calc the accumulated reward
-                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma, self.sub_agent_counter-1) 
 
                 #update super aget transition 
                 if self.start_heirarchy_learning:
@@ -570,16 +615,9 @@ class HierarchyAgent(object):
                 #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
 
                 #calc the accumulated reward
-                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
+                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma, self.sub_agent_counter-1)  
         
-        """
-        # EDIT - call dqn instead
 
-
-        for agent in self.agent_list:
-            self.action = agent.end_episode(reward)
-        return self.action
-        """
 
     def _select_action(self):
         """Select an action from the set of available actions.
@@ -641,18 +679,21 @@ class HierarchyAgent(object):
         Args:
           observation: numpy array, an observation from the environment.
         """
+        
+        #update observation buffer
+        if len(self.last_states) == 0:
+            self.last_states.insert(0,observation)
+            self.last_states.insert(0,observation)
+            self.last_states.insert(0,observation)
+            
+        if len(self.last_states) == self.stack_size:
+            self.last_states.pop()
+            
+        self.last_states.insert(0,observation)
+        
         # Set current observation. We do the reshaping to handle environments
         # without frame stacking.
-        #print(np.shape(observation))
-        #     plt.figure()
-        #     plt.imshow( observation[:,:,0])
-        #     plt.show()
-
         self._observation = np.reshape(observation, self.observation_shape)
-        ##print(np.shape(self._observation))
-        #plt.figure()
-        #plt.imshow(self._observation)
-        #plt.show()
 
         # Swap out the oldest frame with the current frame.
         self.state = np.roll(self.state, -1, axis=-1)
