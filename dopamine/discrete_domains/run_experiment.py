@@ -309,7 +309,6 @@ class Runner(object):
         
     action = self._initialize_episode()
     is_terminal = False
-    complex_action_counter = 0
 
     # Keep interacting until we reach a terminal state.
     while True:
@@ -320,7 +319,6 @@ class Runner(object):
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
             
-            activated_agent = self._agent.activated_agent
             episode_subagent_return[activated_agent] += reward
             total_dqn_utilization[activated_agent]   += 1
  
@@ -338,28 +336,39 @@ class Runner(object):
             # end of episode to the agent.
             self._agent.end_episode(reward)
             action = self._agent.begin_episode(observation)
-        
+            activated_agent = self._agent.activated_agent
+
         else:
             
             action = self._agent.step(reward, observation)
-        
-        if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+            activated_agent = self._agent.activated_agent
 
+        if type( self._agent ) is hierarchy_agent.HierarchyAgent:
+            
             action_hist_of_agent[activated_agent][self._agent.simple_action] += 1
-            complex_action_counter += 1
+            
             
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
+        
+        
+        
+        
         
         for ii in range( np.shape(total_dqn_utilization)[0] ):
         
             if total_dqn_utilization[ii] != 0:
                 
                 episode_subagent_return[ii] =  episode_subagent_return[ii] / total_dqn_utilization[ii]
-            
+                for action in range( np.shape(action_hist_of_agent)[1] ):
+                    action_hist_of_agent[ii][action] = action_hist_of_agent[ii][action] / total_dqn_utilization[ii]
+                
             else:
+                for action in range( np.shape(action_hist_of_agent)[1] ):
+                    action_hist_of_agent[ii][action] = 0
 
                 episode_subagent_return[ii] = 0
-                    
+            total_dqn_utilization[ii] = total_dqn_utilization[ii] / step_number
+            
     self._end_episode(reward)
 
     return step_number, total_reward, episode_subagent_return, total_dqn_utilization, action_hist_of_agent

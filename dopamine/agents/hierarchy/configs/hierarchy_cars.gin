@@ -10,7 +10,7 @@ import gin.tf.external_configurables
 #my param
 #how many epocs we want to perform before super agent starts to learn
 Runner.epoc_in_pretrain = 200
-HierarchyAgent.steps_in_every_action = 10 #how many steps the sub agent does every time he is chosen
+HierarchyAgent.steps_in_every_action = 50000 #how many steps the sub agent does every time he is chosen
 
 HierarchyAgent.gamma = 0.99
 HierarchyAgent.update_horizon = 1
