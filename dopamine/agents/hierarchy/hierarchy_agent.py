@@ -105,7 +105,8 @@ class HierarchyAgent(object):
                    centered=True),
                summary_writer=None,
                summary_writing_frequency=500,
-               steps_in_every_action = 10):
+               steps_in_every_action = 10,
+               seccond_learning_rate = 0.00025):
         """Initializes the agent and constructs the components of its graph.
 
         Args:
@@ -163,7 +164,8 @@ class HierarchyAgent(object):
 
 
         self.num_actions = num_actions
-
+        self._seccond_learning_rate = seccond_learning_rate
+        
         self.observation_shape = tuple(observation_shape)
         self.observation_dtype = observation_dtype
         self.stack_size = stack_size
@@ -187,9 +189,10 @@ class HierarchyAgent(object):
         self.steps_in_every_action = steps_in_every_action
         self.cumulative_gamma_sub = math.pow( gamma, self.steps_in_every_action )
         self.need_to_select_action = True
+        self.deleyed_init = False
         self.last_states = []
         self.counter = 0
-
+        
         with tf.device(tf_device):
             # Create a placeholder for the state input to the DQN network.
             # The last axis indicates the number of consecutive frames stacked.
@@ -404,7 +407,6 @@ class HierarchyAgent(object):
         Returns:
           int, the selected action.
         """
-#         print("$"*100, self.sub_agent_counter)
         self._reset_state()
         self._record_observation(observation)
 
@@ -418,25 +420,26 @@ class HierarchyAgent(object):
             #train all the sub agents 
             for agent in self.agent_list:
                 agent._train_step()
-
-        if (self.need_to_select_action == True) or self.is_sub_agent == False:
+        # we had to choose action later because we need to finish the sub agent's actions        
+        if self.is_sub_agent == True and self.need_to_select_action == False:
+            self.deleyed_init = True
+                
+        # if it's the first episode or we are not in the middle of a sub-agent step we need to selct a new action
+        # if we are in the middle of a sub-agent action we don't want to switch to another sub-agent because our buffer assumes
+        # each step is completed
+        if self.is_sub_agent == False or self.need_to_select_action == True:
             
             if self.need_to_select_action == False:
                 
-#                 print("%"*100, self.counter)
-                #store the current observation in last agent
                 self._store_transition(self._observation, self.action, 0, -1, False) 
-#                 print("%"*15, "store the current observation in: ", self.action)
 
             self.action = self._select_action()
-            
             if self.need_to_select_action == False:
 
                 #store the 3 last observation in current agent
                 self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
                 self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
                 self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
-#                 print("%"*10, "store the 3 last observation in: ", self.action)
 
             #update agent number for display
             self.activated_agent    = 0
@@ -539,8 +542,16 @@ class HierarchyAgent(object):
             self._store_transition(self._observation, self.action, 0, -1, False) 
 #             print("%"*15, "store the current observation in: ", self.action)
             
-            self.action = self._select_action()
+#            self.action = self._select_action()
             
+            if self.start_heirarchy_learning == True:
+                self.action = self._select_action()
+            else:
+                if self.deleyed_init == True:
+                    self.deleyed_init = False
+                    self.action = self._select_action()
+
+                
             #store the 3 last observation in current agent
             self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
             self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
@@ -808,6 +819,15 @@ class HierarchyAgent(object):
                             os.path.join(checkpoint_dir,
                                          'tf_ckpt-{}'.format(iteration_number)))
         return True
+   
+    
+    
+    def change_learning_rate(self):
+
+        for agent in self.agent_list:
+            agent.optimizer._learning_rate = self._seccond_learning_rate
+            
+
 
     # EDIT - setter and getter for eval mode, eval mode shold be propagated to sub agents
     @property
@@ -820,5 +840,5 @@ class HierarchyAgent(object):
         for agent in self.agent_list:
             agent.eval_mode = value
  
-
+    
 

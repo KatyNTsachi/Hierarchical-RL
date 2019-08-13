@@ -311,17 +311,19 @@ class Runner(object):
     is_terminal = False
 
     # Keep interacting until we reach a terminal state.
+
     while True:
-      
+
         observation, reward, is_terminal = self._run_one_step(action)
         total_reward = total_reward + reward
         step_number = step_number + 1
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-            
+            activated_agent = self._agent.activated_agent
             episode_subagent_return[activated_agent] += reward
             total_dqn_utilization[activated_agent]   += 1
- 
+        
+
         # Perform reward clipping.
         reward = np.clip(reward, -1, 1)
 
@@ -346,14 +348,9 @@ class Runner(object):
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
             
             action_hist_of_agent[activated_agent][self._agent.simple_action] += 1
-            
-            
+          
     if type( self._agent ) is hierarchy_agent.HierarchyAgent: 
-        
-        
-        
-        
-        
+
         for ii in range( np.shape(total_dqn_utilization)[0] ):
         
             if total_dqn_utilization[ii] != 0:
@@ -370,6 +367,7 @@ class Runner(object):
             total_dqn_utilization[ii] = total_dqn_utilization[ii] / step_number
             
     self._end_episode(reward)
+    
 
     return step_number, total_reward, episode_subagent_return, total_dqn_utilization, action_hist_of_agent
 
@@ -424,7 +422,9 @@ class Runner(object):
         for agent in range(num_of_agents):
             tmp_dict2['{}_agent_{:d}_average_episode_returns'.format(run_mode_str,agent)] = \
                                                             avg_episode_subagent_return[agent] * episode_length
-       
+            
+
+        
         statistics.append(tmp_dict)
         statistics.append(tmp_dict1)
         statistics.append(tmp_dict2)
@@ -451,6 +451,7 @@ class Runner(object):
       average_reward: The average reward generated in this phase.
     """
     # Perform the training phase, during which the agent learns.
+
     self._agent.eval_mode = False
     start_time = time.time()
     number_steps, sum_returns, num_episodes = self._run_one_phase(
@@ -577,7 +578,8 @@ class Runner(object):
                 if not started_hierarchy and iteration == self.epoc_in_pretrain:
                     self._agent.start_heirarchy_learning = True
                     started_hierarchy = True
-            
+                    self._agent.change_learning_rate()
+                    
             statistics = self._run_one_iteration(iteration)
             self._log_experiment(iteration, statistics)
             self._checkpoint_experiment(iteration)
