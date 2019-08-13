@@ -162,10 +162,11 @@ class HierarchyAgent(object):
         tf.logging.info('\t optimizer: %s', optimizer)
 
 
-
+        self._size_of_state_history = steps_in_every_action + stack_size
+        
         self.num_actions = num_actions
         self._seccond_learning_rate = seccond_learning_rate
-        
+#         self._stack_size
         self.observation_shape = tuple(observation_shape)
         self.observation_dtype = observation_dtype
         self.stack_size = stack_size
@@ -191,7 +192,7 @@ class HierarchyAgent(object):
         self.need_to_select_action = True
         self.deleyed_init = False
         self.last_states = []
-        self.counter = 0
+
         
         with tf.device(tf_device):
             # Create a placeholder for the state input to the DQN network.
@@ -238,9 +239,9 @@ class HierarchyAgent(object):
         self._last_observation = None
 
 
-
+        self.action = 0
         self.sub_agent_counter = 0
-        self.is_sub_agent = True
+        self.is_sub_agent = False
         self.accumulated_reward = 0
         self.start_heirarchy_learning = False
         
@@ -303,30 +304,29 @@ class HierarchyAgent(object):
           A WrapperReplayBuffer object.
         """
         
-#         wrapped_memory = circular_replay_buffer.OutOfGraphReplayBufferSubAgent(
-#                                                self.observation_shape,
-#                                                self.stack_size,
-#                                                update_horizon = self.update_horizon,
-#                                                gamma = self.gamma,
-#                                                max_sample_attempts = circular_replay_buffer.MAX_SAMPLE_ATTEMPTS,
-#                                                observation_dtype=self.observation_dtype.as_numpy_dtype,
-#                                                extra_storage_types=None,
-#                                                action_shape=(),
-#                                                action_dtype=np.int32,  
-#                                                reward_shape=(),
-#                                                reward_dtype=np.float32)  
-        
+        wrapped_memory = circular_replay_buffer.OutOfGraphReplayBufferSuperAgent(
+                                               self.observation_shape,
+                                               self.stack_size,
+                                               update_horizon = self.update_horizon,
+                                               gamma = self.gamma,
+                                               max_sample_attempts = circular_replay_buffer.MAX_SAMPLE_ATTEMPTS,
+                                               observation_dtype=self.observation_dtype.as_numpy_dtype,
+                                               extra_storage_types=None,
+                                               action_shape=(),
+                                               action_dtype=np.int32,  
+                                               reward_shape=(),
+                                               reward_dtype=np.float32,
+                                               sub_sgent_steps = self.sub_sgent_steps)  
 
-             
         return circular_replay_buffer.WrappedReplayBuffer(
-            observation_shape=self.observation_shape,
-            stack_size=self.stack_size,
-            use_staging=use_staging,
-            update_horizon=self.update_horizon,
-            gamma=self.gamma,
-            observation_dtype=self.observation_dtype.as_numpy_dtype,
-            #wrapped_memory = wrapped_memory
-        )
+                                     observation_shape=self.observation_shape,
+                                     stack_size=self.stack_size,
+                                     use_staging=use_staging,
+                                     update_horizon=self.update_horizon,
+                                     gamma=self.gamma,
+                                     observation_dtype=self.observation_dtype.as_numpy_dtype,
+                                     wrapped_memory = wrapped_memory)
+        
 
     def _build_target_q_op(self):
         """Build an op used as a target for the Q-value.
@@ -407,6 +407,7 @@ class HierarchyAgent(object):
         Returns:
           int, the selected action.
         """
+                
         self._reset_state()
         self._record_observation(observation)
 
@@ -417,11 +418,12 @@ class HierarchyAgent(object):
             if self.start_heirarchy_learning:
                 self._train_step()
 
-            #train all the sub agents 
-            for agent in self.agent_list:
-                agent._train_step()
+            #train sub agent
+            self.agent_list[self.action]._train_step()  
+            
+            
         # we had to choose action later because we need to finish the sub agent's actions        
-        if self.is_sub_agent == True and self.need_to_select_action == False:
+        if self.is_sub_agent == True:
             self.deleyed_init = True
                 
         # if it's the first episode or we are not in the middle of a sub-agent step we need to selct a new action
@@ -432,17 +434,18 @@ class HierarchyAgent(object):
             if self.need_to_select_action == False:
                 
                 self._store_transition(self._observation, self.action, 0, -1, False) 
-
+            
+            #new agent
             self.action = self._select_action()
+            
             if self.need_to_select_action == False:
 
                 #store the 3 last observation in current agent
                 self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
                 self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
                 self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
-
+                
             #update agent number for display
-            self.activated_agent    = 0
             self.sub_agent_counter  = 0
 
             self.is_sub_agent       = True
@@ -461,12 +464,7 @@ class HierarchyAgent(object):
         if self.sub_agent_counter == self.steps_in_every_action:
             self.is_sub_agent = False        
             
-        
-        #update agent number for display
-        self.activated_agent = self.action 
-        
-        
-        self.counter = self.counter + 1
+                
         return self.simple_action
 
 
@@ -489,6 +487,20 @@ class HierarchyAgent(object):
         self._last_observation = self._observation
         self._record_observation(observation)
 
+        #if sub agent just finished. we need to update all transitions
+        if self.is_sub_agent == False:
+            return self._step_for_begin_of_sub_agent(reward, observation)
+        else:
+            return self._step_for_middle_of_sub_agent(reward, observation)
+                
+   
+
+
+    def _step_for_begin_of_sub_agent(self, reward, observation):
+        '''
+        if we are in the beginning of aget, we just started running it we need to do several things difrently
+        '''
+
         ####################################################store transition###################################################
         ####################################################update reward #####################################################
         ####################################################training agents####################################################
@@ -497,96 +509,112 @@ class HierarchyAgent(object):
         if not self.eval_mode:
             
             #if sub agent just finished. we need to update all transitions
-            if self.is_sub_agent == False:
                 
-                #calc the accumulated reward
-                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
+            #update the accumulated reward
+            self._update_accumulated_reward(reward)
 
-                #update super aget transition 
-                if self.start_heirarchy_learning:
-                    self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
+            #regular agent update every step
+            # we enter reward and *not* self.accumulated_reward
+            self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)    
 
-                #regular agent update every step30776
-                # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)   
-
-                #train super agent 
-                if self.start_heirarchy_learning:
-                    self._train_step()
+            #train super agent 
+            if self.start_heirarchy_learning:
+                self._train_step()
+                
 
             # we are in the middel of some sub agent, we are waiting for final resaults
-            else: 
-
-                #regular agent update every step
-                # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)   
-
-                #get gamma from agent
-                #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
-
-                #calc the accumulated reward
-                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1)  
-
+                
             #train sub agents 
-            self.agent_list[self.action]._train_step()
+            self.agent_list[self.action]._train_step()  
             
         #######################################################################################################################
         ####################################################choose action######################################################
         #######################################################################################################################       
         
         # if we are super agent
-        if self.is_sub_agent == False:
             
-#             print("%"*100, self.counter)
-            #store the current observation in last agent
-            self._store_transition(self._observation, self.action, 0, -1, False) 
-#             print("%"*15, "store the current observation in: ", self.action)
-            
-#            self.action = self._select_action()
-            
-            if self.start_heirarchy_learning == True:
-                self.action = self._select_action()
-            else:
-                if self.deleyed_init == True:
-                    self.deleyed_init = False
-                    self.action = self._select_action()
+        # we need to update the last agent wiht the new observation
+        # because he needs the next state
+        #if not eval mode 
+        if not self.eval_mode:
 
+            self._store_transition(self._observation, self.action, 0, -1, False)    
+
+            if self.start_heirarchy_learning:
+                self._store_hirarchy_transition(np.squeeze( self.last_states[-1] ), 0, 0, False)
+                self._store_hirarchy_transition(np.squeeze( self.last_states[-2] ), 0, 0, False)
+                self._store_hirarchy_transition(np.squeeze( self.last_states[-3] ), 0, 0, False)
+                self._store_hirarchy_transition(np.squeeze( self.last_states[-4] ), self.action, self.accumulated_reward, False)
+
+        #change sub agent
+        if self.start_heirarchy_learning == True:
+            self.action = self._select_action()
+            
+        else:
+            # if we are in the learning period and we are in the middle of episode we dont want to change agent
+            # we would change agent only when finishing the episode
+            if self.deleyed_init == True:
+                self.deleyed_init = False
+                self.action = self._select_action()
                 
+        #if not eval mode 
+        if not self.eval_mode:
+            #we corrent the buffer because we jumpt to other agent.
+            #it effect the sub agent buffer and the supper agent buffer
             #store the 3 last observation in current agent
             self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
             self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
             self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
-#             print("%"*10, "store the 3 last observation in: ", self.action)
 
-            
-            #update agent number for display
-            self.activated_agent    = 0
-            self.accumulated_reward = 0 
 
-            # if subagent
-            self.simple_action     = self.agent_list[ self.action ].step()
-            self.sub_agent_counter = 1
-            self.is_sub_agent      = True
+        #update agent number for display
+        self.accumulated_reward = 0 
 
-            #update agent number for display
-            self.activated_agent = self.action 
+        # if subagent
+        self.simple_action     = self.agent_list[ self.action ].step()
+        self.sub_agent_counter = 1
+        self.is_sub_agent      = True
 
-        #if we are in the sub agent
-        else:
-
-            self.simple_action = self.agent_list[ self.action ].step()
-
-            #update counter
-            self.sub_agent_counter = self.sub_agent_counter + 1
-
-            # if we did all the iteration with this agent
-            if self.sub_agent_counter == self.steps_in_every_action:
-
-                self.is_sub_agent = False        
-                
-        self.counter = self.counter + 1
         return self.simple_action
+        
+        
+    def _step_for_middle_of_sub_agent(self, reward, observation):
+        '''
+        if we are in the middle of sub aget, we just started running it we need to do several things difrently
+        '''
 
+        ####################################################store transition###################################################
+        ####################################################update reward #####################################################
+        ####################################################training agents####################################################
+        #######################################################################################################################
+        #if not eval mode 
+        if not self.eval_mode:
+                            
+            #update the accumulated reward
+            self._update_accumulated_reward(reward)
+
+            #regular agent update every step
+            # we enter reward and *not* self.accumulated_reward
+            self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)     
+                
+            #train sub agents 
+            self.agent_list[self.action]._train_step()  
+            
+        #######################################################################################################################
+        ####################################################choose action######################################################
+        #######################################################################################################################       
+
+        self.simple_action = self.agent_list[ self.action ].step()
+
+        #update counter
+        self.sub_agent_counter = self.sub_agent_counter + 1
+
+        # if we did all the iteration with this agent
+        if self.sub_agent_counter == self.steps_in_every_action:
+
+            self.is_sub_agent = False        
+                
+        return self.simple_action
 
     
     def end_episode(self, reward):
@@ -598,35 +626,34 @@ class HierarchyAgent(object):
         Args:
           reward: float, the last reward from the environment.
         """
+        self._update_accumulated_reward(reward)
 
         if not self.eval_mode:
 
+            self._store_transition(self._observation, self.action, self.simple_action, reward, True) 
+
             #if sub agent just finished. we need to update all transitions
             if self.is_sub_agent == False:
+                
+                zero_observation = np.zeros( self.observation_shape )
 
-                #calc the accumulated reward
-                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma, self.sub_agent_counter-1) 
-
+                self._store_transition(np.squeeze(zero_observation), self.action, 0, -1, False)    
+                
                 #update super aget transition 
-                if self.start_heirarchy_learning:
-                    self._store_hirarchy_transition(self._last_observation, self.action, self.accumulated_reward, False)    
-
+                if self.start_heirarchy_learning:                                                                      
+                    self._store_hirarchy_transition(np.squeeze( self.last_states[-1] ), 0, 0, False)
+                    self._store_hirarchy_transition(np.squeeze( self.last_states[-2] ), 0, 0, False)
+                    self._store_hirarchy_transition(np.squeeze( self.last_states[-3] ), 0, 0, False)
+                    self._store_hirarchy_transition(np.squeeze( self.last_states[-4] ), self.action, self.accumulated_reward, False)
+                
+                
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)   
 
+                
             # we are in the middel of some sub agent, we are waiting for final resaults
-            else: 
+                
 
-                #regular agent update every step
-                # we enter reward and *not* self.accumulated_reward
-                self._store_transition(self._last_observation, self.action, self.simple_action, reward, False) 
-
-                #get gamma from agent
-                #gamma = self.agent_list[self.action - self.num_simpe_actions].gamma
-
-                #calc the accumulated reward
-                self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma, self.sub_agent_counter-1)  
         
 
 
@@ -692,15 +719,9 @@ class HierarchyAgent(object):
         """
         
         #update observation buffer
-        if len(self.last_states) == 0:
-            self.last_states.insert(0,observation)
-            self.last_states.insert(0,observation)
-            self.last_states.insert(0,observation)
-            
-        if len(self.last_states) == self.stack_size:
-            self.last_states.pop()
-            
-        self.last_states.insert(0,observation)
+        self.last_states.pop()
+        self.last_states.insert(0, observation)
+        
         
         # Set current observation. We do the reshaping to handle environments
         # without frame stacking.
@@ -754,6 +775,17 @@ class HierarchyAgent(object):
 
     def _reset_state(self):
         """Resets the agent state by filling it with zeros."""
+        zero_observation = np.zeros( self.observation_shape )
+        
+        if len(self.last_states) == 0:
+            for i in range(self._size_of_state_history):
+                self.last_states.insert(0,zero_observation)
+        else:
+            for i in range(self.stack_size - 1):
+                self.last_states.pop(0)
+            for i in range(self.stack_size - 1):
+                self.last_states.insert(0, zero_observation)
+ 
         self.state.fill(0)
 
     def bundle_and_checkpoint(self, checkpoint_dir, iteration_number):
@@ -827,6 +859,9 @@ class HierarchyAgent(object):
         for agent in self.agent_list:
             agent.optimizer._learning_rate = self._seccond_learning_rate
             
+            
+    def _update_accumulated_reward(self, reward):
+        self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 
 
 
     # EDIT - setter and getter for eval mode, eval mode shold be propagated to sub agents

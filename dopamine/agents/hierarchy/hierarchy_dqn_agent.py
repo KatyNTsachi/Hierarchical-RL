@@ -279,13 +279,13 @@ class HierarchyDQNAgent(object):
                                        sub_sgent_steps = self.sub_sgent_steps)  
 
     return circular_replay_buffer.WrappedReplayBuffer(
-        observation_shape=self.observation_shape,
-        stack_size=self.stack_size,
-        use_staging=use_staging,
-        update_horizon=self.update_horizon,
-        gamma=self.gamma,
-        observation_dtype=self.observation_dtype.as_numpy_dtype,
-        wrapped_memory = wrapped_memory)
+                                 observation_shape=self.observation_shape,
+                                 stack_size=self.stack_size,
+                                 use_staging=use_staging,
+                                 update_horizon=self.update_horizon,
+                                 gamma=self.gamma,
+                                 observation_dtype=self.observation_dtype.as_numpy_dtype,
+                                 wrapped_memory = wrapped_memory)
 
   def _build_target_q_op(self):
     """Build an op used as a target for the Q-value.

@@ -319,7 +319,7 @@ class Runner(object):
         step_number = step_number + 1
         
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
-            activated_agent = self._agent.activated_agent
+            activated_agent = self._agent.action
             episode_subagent_return[activated_agent] += reward
             total_dqn_utilization[activated_agent]   += 1
         
@@ -338,12 +338,12 @@ class Runner(object):
             # end of episode to the agent.
             self._agent.end_episode(reward)
             action = self._agent.begin_episode(observation)
-            activated_agent = self._agent.activated_agent
+            activated_agent = self._agent.action
 
         else:
             
             action = self._agent.step(reward, observation)
-            activated_agent = self._agent.activated_agent
+            activated_agent = self._agent.action
 
         if type( self._agent ) is hierarchy_agent.HierarchyAgent:
             
