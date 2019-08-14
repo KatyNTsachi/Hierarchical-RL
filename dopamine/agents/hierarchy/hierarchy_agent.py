@@ -97,12 +97,11 @@ class HierarchyAgent(object):
                tf_device='/cpu:*',
                use_staging=True,
                max_tf_checkpoints_to_keep=4,
-               optimizer=tf.train.RMSPropOptimizer(
-                   learning_rate=0.00025,
-                   decay=0.95,
-                   momentum=0.0,
-                   epsilon=0.00001,
-                   centered=True),
+               learning_rate=0.00025,
+               decay=0.95,
+               momentum=0.0,
+               epsilon=0.00001,
+               centered=True,
                summary_writer=None,
                summary_writing_frequency=500,
                steps_in_every_action = 10,
@@ -146,6 +145,15 @@ class HierarchyAgent(object):
           summary_writing_frequency: int, frequency with which summaries will be
             written. Lower values will result in slower training.
         """
+        
+        optimizer = tf.train.RMSPropOptimizer(
+                            learning_rate = learning_rate,
+                            decay = 0.95,
+                            momentum = 0.0,
+                            epsilon = 0.00001,
+                            centered = True)
+        self.optimizer = optimizer
+
         assert isinstance(observation_shape, tuple)
         tf.logging.info('Creating %s agent with the following parameters:',
                         self.__class__.__name__)
@@ -184,7 +192,8 @@ class HierarchyAgent(object):
         # EDIT - use property decorator on eval_mode, not called here, dqn does not exist yet
         self._eval_mode = False
         self.training_steps = 0
-        self.optimizer = optimizer
+        
+        
         self.summary_writer = summary_writer
         self.summary_writing_frequency = summary_writing_frequency
         self.steps_in_every_action = steps_in_every_action
@@ -913,10 +922,10 @@ class HierarchyAgent(object):
     
     
     def change_learning_rate(self):
-
+        print("$"*1000)
         for agent in self.agent_list:
-            agent.optimizer._learning_rate = self._seccond_learning_rate
-            
+            agent._learning_rate = self._seccond_learning_rate
+            print("new learning rate", agent._learning_rate)
             
     def _update_accumulated_reward(self, reward):
         self.accumulated_reward = self.accumulated_reward + reward * pow(self.gamma,self.sub_agent_counter-1) 

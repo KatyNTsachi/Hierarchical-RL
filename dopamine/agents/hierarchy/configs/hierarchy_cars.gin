@@ -9,8 +9,8 @@ import gin.tf.external_configurables
 
 #my param
 #how many epocs we want to perform before super agent starts to learn
-Runner.epoc_in_pretrain = 1
-HierarchyAgent.steps_in_every_action = 10 #how many steps the sub agent does every time he is chosen
+Runner.epoc_in_pretrain = 200
+HierarchyAgent.steps_in_every_action = 150 #how many steps the sub agent does every time he is chosen
 HierarchyAgent.seccond_learning_rate = 0.0
 
 HierarchyAgent.gamma = 0.99
@@ -26,7 +26,7 @@ HierarchyAgent.epsilon_train = 0.01
 HierarchyAgent.epsilon_eval = 0.001
 HierarchyAgent.epsilon_decay_period = 250000    # agent steps
 HierarchyAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
-HierarchyAgent.optimizer = @tf.train.RMSPropOptimizer()
+
 
 HierarchyDQNAgent.gamma = 0.99
 HierarchyDQNAgent.update_horizon = 1
@@ -37,13 +37,21 @@ HierarchyDQNAgent.epsilon_train = 0.01
 HierarchyDQNAgent.epsilon_eval = 0.001
 HierarchyDQNAgent.epsilon_decay_period = 250000    # agent steps
 HierarchyDQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
-HierarchyDQNAgent.optimizer = @tf.train.RMSPropOptimizer()
 
-tf.train.RMSPropOptimizer.learning_rate = 0.00065
-tf.train.RMSPropOptimizer.decay = 0.95
-tf.train.RMSPropOptimizer.momentum = 0.0
-tf.train.RMSPropOptimizer.epsilon = 0.00001
-tf.train.RMSPropOptimizer.centered = True
+
+HierarchyDQNAgent.learning_rate = 0.00065
+HierarchyDQNAgent.decay = 0.95
+HierarchyDQNAgent.momentum = 0.0
+HierarchyDQNAgent.epsilon = 0.00001
+HierarchyDQNAgent.centered = True
+
+
+HierarchyAgent.learning_rate = 0.00065
+HierarchyAgent.decay = 0.95
+HierarchyAgent.momentum = 0.0
+HierarchyAgent.epsilon = 0.00001
+HierarchyAgent.centered = True
+
 
 atari_lib.create_atari_environment.game_name = 'Breakout'
 # Deterministic ALE version used in the DQN Nature paper (Mnih et al., 2015).
