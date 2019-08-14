@@ -144,10 +144,10 @@ class HierarchyDQNAgent(object):
     """
     
     self._learning_rate = learning_rate
-    ph_learning_rate = tf.placeholder(tf.float32, shape=[])            
+    self.learning_rate_ph = tf.placeholder(tf.float32, shape=[])            
     
     optimizer = tf.train.RMSPropOptimizer(
-                         learning_rate = ph_learning_rate,
+                         learning_rate = self.learning_rate_ph,
                          decay = 0.95,
                          momentum = 0.0,
                          epsilon = 0.00001,
@@ -455,7 +455,7 @@ class HierarchyDQNAgent(object):
     # have been run. This matches the Nature DQN behaviour.
     if self._replay.memory.add_count > self.min_replay_history:
       if self.training_steps % self.update_period == 0:
-        self._sess.run(self._train_op, feed_dict={learning_rate: self._learning_rate} )
+        self._sess.run(self._train_op, feed_dict={self.learning_rate_ph: self._learning_rate} )
         if (self.summary_writer is not None and
             self.training_steps > 0 and
             self.training_steps % self.summary_writing_frequency == 0):
