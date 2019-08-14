@@ -410,10 +410,18 @@ class HierarchyAgent(object):
                 
         self._reset_state()
         self._record_observation(observation)
+        
+        if self.is_sub_agent == False:
+            return self.begin_episode_for_begin_of_sub_agent()
+        else:
+            return self.begin_episode_for_middle_of_sub_agent()
 
+        
+        
+    def begin_episode_for_begin_of_sub_agent(self):
+        
         #if not eval mode 
         if not self.eval_mode:
-
             #train super agent 
             if self.start_heirarchy_learning:
                 self._train_step()
@@ -421,42 +429,60 @@ class HierarchyAgent(object):
             #train sub agent
             self.agent_list[self.action]._train_step()  
             
+                           
+        # if it's the first episode or we are not in the middle of a sub-agent step we need to selct a new action
+        # if we are in the middle of a sub-agent action we don't want to switch to another sub-agent because our buffer assumes
+        # each step is completed
+
+        #new agent
+        self.action = self._select_action()
+
+        #if not eval mode 
+        if not self.eval_mode:
+            #store the 3 last observation in current agent
+            self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
+            self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
+            self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
+
+
+        self.is_sub_agent = True
+        self.accumulated_reward = 0 
+            
+        #update last_simple_action  
+        self.simple_action = self.agent_list[ self.action ]._select_action()
+        
+        #update counter
+        self.sub_agent_counter = 1
+        
+        if self.sub_agent_counter == self.steps_in_every_action:
+            self.is_sub_agent = False        
+                            
+        return self.simple_action
+
+        
+        
+    def begin_episode_for_middle_of_sub_agent(self):
+        
+        #if not eval mode 
+        if not self.eval_mode:
+
+            #train super agent 
+            if self.start_heirarchy_learning:
+                self._train_step()
+                
+            #train sub agent
+            self.agent_list[self.action]._train_step()  
+            
             
         # we had to choose action later because we need to finish the sub agent's actions        
-        if self.is_sub_agent == True:
-            self.deleyed_init = True
+        self.deleyed_init = True
                 
         # if it's the first episode or we are not in the middle of a sub-agent step we need to selct a new action
         # if we are in the middle of a sub-agent action we don't want to switch to another sub-agent because our buffer assumes
         # each step is completed
-        if self.is_sub_agent == False or self.need_to_select_action == True:
-            
-            if self.need_to_select_action == False:
-                
-                self._store_transition(self._observation, self.action, 0, -1, False) 
-            
-            #new agent
-            self.action = self._select_action()
-            
-            if self.need_to_select_action == False:
-
-                #store the 3 last observation in current agent
-                self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
-                self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
-                self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
-                
-            #update agent number for display
-            self.sub_agent_counter  = 0
-
-            self.is_sub_agent       = True
-            self.accumulated_reward = 0 
-            
-            self.need_to_select_action = False
-            
-            
 
         #update last_simple_action  
-        self.simple_action     = self.agent_list[ self.action ].step()
+        self.simple_action = self.agent_list[ self.action ]._select_action()
         
         #update counter
         self.sub_agent_counter = self.sub_agent_counter + 1
@@ -464,7 +490,6 @@ class HierarchyAgent(object):
         if self.sub_agent_counter == self.steps_in_every_action:
             self.is_sub_agent = False        
             
-                
         return self.simple_action
 
 
@@ -494,8 +519,6 @@ class HierarchyAgent(object):
             return self._step_for_middle_of_sub_agent(reward, observation)
                 
    
-
-
     def _step_for_begin_of_sub_agent(self, reward, observation):
         '''
         if we are in the beginning of aget, we just started running it we need to do several things difrently
@@ -505,14 +528,15 @@ class HierarchyAgent(object):
         ####################################################update reward #####################################################
         ####################################################training agents####################################################
         #######################################################################################################################
+        
+        #update the accumulated reward
+        self._update_accumulated_reward(reward)
+
+        
         #if not eval mode 
         if not self.eval_mode:
             
             #if sub agent just finished. we need to update all transitions
-                
-            #update the accumulated reward
-            self._update_accumulated_reward(reward)
-
             #regular agent update every step
             # we enter reward and *not* self.accumulated_reward
             self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)    
@@ -521,23 +545,19 @@ class HierarchyAgent(object):
             if self.start_heirarchy_learning:
                 self._train_step()
                 
-
             # we are in the middel of some sub agent, we are waiting for final resaults
-                
             #train sub agents 
             self.agent_list[self.action]._train_step()  
             
-        #######################################################################################################################
-        ####################################################choose action######################################################
-        #######################################################################################################################       
-        
-        # if we are super agent
-            
-        # we need to update the last agent wiht the new observation
-        # because he needs the next state
-        #if not eval mode 
-        if not self.eval_mode:
+            #######################################################################################################################
+            ####################################################choose action######################################################
+            #######################################################################################################################       
 
+            # if we are super agent
+
+            # we need to update the last agent wiht the new observation
+            # because he needs the next state
+            #if not eval mode 
             self._store_transition(self._observation, self.action, 0, -1, False)    
 
             if self.start_heirarchy_learning:
@@ -571,7 +591,7 @@ class HierarchyAgent(object):
         self.accumulated_reward = 0 
 
         # if subagent
-        self.simple_action     = self.agent_list[ self.action ].step()
+        self.simple_action     = self.agent_list[ self.action ]._select_action()
         self.sub_agent_counter = 1
         self.is_sub_agent      = True
 
@@ -587,11 +607,12 @@ class HierarchyAgent(object):
         ####################################################update reward #####################################################
         ####################################################training agents####################################################
         #######################################################################################################################
+        
+        #update the accumulated reward
+        self._update_accumulated_reward(reward)
+        
         #if not eval mode 
         if not self.eval_mode:
-                            
-            #update the accumulated reward
-            self._update_accumulated_reward(reward)
 
             #regular agent update every step
             # we enter reward and *not* self.accumulated_reward
@@ -604,14 +625,13 @@ class HierarchyAgent(object):
         ####################################################choose action######################################################
         #######################################################################################################################       
 
-        self.simple_action = self.agent_list[ self.action ].step()
+        self.simple_action = self.agent_list[ self.action ]._select_action()
 
         #update counter
         self.sub_agent_counter = self.sub_agent_counter + 1
 
         # if we did all the iteration with this agent
         if self.sub_agent_counter == self.steps_in_every_action:
-
             self.is_sub_agent = False        
                 
         return self.simple_action
@@ -634,10 +654,9 @@ class HierarchyAgent(object):
 
             #if sub agent just finished. we need to update all transitions
             if self.is_sub_agent == False:
-                
                 zero_observation = np.zeros( self.observation_shape )
 
-                self._store_transition(np.squeeze(zero_observation), self.action, 0, -1, False)    
+                self._store_transition(np.squeeze(zero_observation), self.action, 0, -1, True)    
                 
                 #update super aget transition 
                 if self.start_heirarchy_learning:                                                                      

@@ -383,9 +383,10 @@ class HierarchyDQNAgent(object):
 #       self._train_step()
 
     self.action = self._select_action()
-
     
     return self.action
+
+
 
   def end_episode(self, reward):
     """Signals the end of the episode to the agent.
@@ -398,6 +399,8 @@ class HierarchyDQNAgent(object):
     """
 #     if not self.eval_mode:
 #       self._store_transition(self._observation, self.action, reward, True)
+
+
 
   def _select_action(self):
     """Select an action from the set of available actions.
