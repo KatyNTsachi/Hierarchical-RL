@@ -11,7 +11,7 @@ import gin.tf.external_configurables
 #how many epocs we want to perform before super agent starts to learn
 Runner.epoc_in_pretrain = 200
 HierarchyAgent.steps_in_every_action = 150 #how many steps the sub agent does every time he is chosen
-HierarchyAgent.seccond_learning_rate = 0.0
+HierarchyAgent.seccond_learning_rate = 0.0000625
 
 HierarchyAgent.gamma = 0.99
 HierarchyAgent.update_horizon = 1
@@ -39,14 +39,14 @@ HierarchyDQNAgent.epsilon_decay_period = 250000    # agent steps
 HierarchyDQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
 
 
-HierarchyDQNAgent.learning_rate = 0.00065
+HierarchyDQNAgent.learning_rate = 0.00025
 HierarchyDQNAgent.decay = 0.95
 HierarchyDQNAgent.momentum = 0.0
 HierarchyDQNAgent.epsilon = 0.00001
 HierarchyDQNAgent.centered = True
 
 
-HierarchyAgent.learning_rate = 0.00065
+HierarchyAgent.learning_rate = 0.00025
 HierarchyAgent.decay = 0.95
 HierarchyAgent.momentum = 0.0
 HierarchyAgent.epsilon = 0.00001
@@ -58,8 +58,8 @@ atari_lib.create_atari_environment.game_name = 'Breakout'
 atari_lib.create_atari_environment.sticky_actions = True
 create_agent.agent_name = 'hierarchy'
 Runner.num_iterations = 600
-Runner.training_steps = 25000 #250000  # agent steps
-Runner.evaluation_steps = 125 #125000  # agent steps
+Runner.training_steps = 250000  # agent steps
+Runner.evaluation_steps = 125000 # agent steps
 Runner.max_steps_per_episode =  27000  # agent steps
 
 #AtariPreprocessing.terminal_on_life_loss = True
@@ -69,4 +69,8 @@ WrappedReplayBuffer.batch_size = 32
 
 OutOfGraphReplayBufferSubAgent.replay_capacity = 1000000
 OutOfGraphReplayBufferSubAgent.batch_size = 32
+
+OutOfGraphReplayBufferSuperAgent.replay_capacity = 1000000
+OutOfGraphReplayBufferSuperAgent.batch_size = 32
+
 
