@@ -103,7 +103,7 @@ class HierarchyDQNAgent(object):
                summary_writer=None,
                summary_writing_frequency=500,
                replay = None,
-               sub_sgent_steps = 10):
+               sub_agent_steps = 10):
     """Initializes the agent and constructs the components of its graph.
 
     Args:
@@ -178,7 +178,7 @@ class HierarchyDQNAgent(object):
     self.optimizer = optimizer
     self.summary_writer = summary_writer
     self.summary_writing_frequency = summary_writing_frequency
-    self.sub_sgent_steps = sub_sgent_steps
+    self.sub_agent_steps = sub_agent_steps
     
     with tf.device(tf_device):
       # Create a placeholder for the state input to the DQN network.
@@ -276,7 +276,7 @@ class HierarchyDQNAgent(object):
                                        action_dtype=np.int32,  
                                        reward_shape=(),
                                        reward_dtype=np.float32,
-                                       sub_sgent_steps = self.sub_sgent_steps)  
+                                       sub_agent_steps = self.sub_agent_steps)  
 
     return circular_replay_buffer.WrappedReplayBuffer(
                                  observation_shape=self.observation_shape,

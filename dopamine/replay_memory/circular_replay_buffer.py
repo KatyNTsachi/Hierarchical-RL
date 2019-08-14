@@ -502,6 +502,7 @@ class OutOfGraphReplayBuffer(object):
         trajectory_length = np.argmax(trajectory_terminals.astype(np.bool),
                                       0) + 1
       next_state_index = state_index + trajectory_length
+        
       trajectory_discount_vector = (
           self._cumulative_discount_vector[:trajectory_length])
       trajectory_rewards = self.get_range(self._store['reward'], state_index,
@@ -912,14 +913,14 @@ class OutOfGraphReplayBufferSubAgent(OutOfGraphReplayBuffer):
                    action_dtype=np.int32,
                    reward_shape=(),
                    reward_dtype=np.float32,
-                   sub_sgent_steps = 10):
+                   sub_agent_steps = 10):
         
         
-        self.sub_sgent_steps = sub_sgent_steps
+        self.sub_agent_steps = sub_agent_steps
         
         #calc replay_capacity
-        self.group_size = self.sub_sgent_steps + stack_size
-        factor = ( self.group_size / self.sub_sgent_steps )
+        self.group_size = self.sub_agent_steps + stack_size
+        factor = ( self.group_size / self.sub_agent_steps )
         new_estimated_size = replay_capacity * factor
         num_of_groups =  int( new_estimated_size / self.group_size )
         self.replay_capacity = num_of_groups * self.group_size
@@ -973,8 +974,11 @@ class OutOfGraphReplayBufferSuperAgent(OutOfGraphReplayBuffer):
         
         
         #calc replay_capacity
+        self._stack_size = stack_size
         self.replay_capacity = replay_capacity * self._stack_size
         update_horizon = self._stack_size
+        
+        self.group_size = self._stack_size
         
         OutOfGraphReplayBuffer.__init__(   self,
                                            observation_shape,

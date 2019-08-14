@@ -192,7 +192,8 @@ class HierarchyAgent(object):
         self.need_to_select_action = True
         self.deleyed_init = False
         self.last_states = []
-
+#         self.last_states2 = []
+#         self.counter = 0
         
         with tf.device(tf_device):
             # Create a placeholder for the state input to the DQN network.
@@ -210,11 +211,11 @@ class HierarchyAgent(object):
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                        summary_writer=summary_writer,\
                                                        gamma = 0.99,\
-                                                       sub_sgent_steps = self.steps_in_every_action) )
+                                                       sub_agent_steps = self.steps_in_every_action) )
             self.agent_list.append( hierarchy_dqn_agent.HierarchyDQNAgent( sess, num_actions=num_actions,\
                                                        summary_writer=summary_writer,\
                                                        gamma = 0.8,\
-                                                       sub_sgent_steps = self.steps_in_every_action) )
+                                                       sub_agent_steps = self.steps_in_every_action) )
 
 
             self.num_simpe_actions = self.num_actions
@@ -315,8 +316,7 @@ class HierarchyAgent(object):
                                                action_shape=(),
                                                action_dtype=np.int32,  
                                                reward_shape=(),
-                                               reward_dtype=np.float32,
-                                               sub_sgent_steps = self.sub_sgent_steps)  
+                                               reward_dtype=np.float32)  
 
         return circular_replay_buffer.WrappedReplayBuffer(
                                      observation_shape=self.observation_shape,
@@ -407,16 +407,23 @@ class HierarchyAgent(object):
         Returns:
           int, the selected action.
         """
-                
+#         print(50*"$", "BEGIN", 50*"$") 
         self._reset_state()
         self._record_observation(observation)
         
         if self.is_sub_agent == False:
-            return self.begin_episode_for_begin_of_sub_agent()
+            tmp = self.begin_episode_for_begin_of_sub_agent()
+            
         else:
-            return self.begin_episode_for_middle_of_sub_agent()
+            tmp = self.begin_episode_for_middle_of_sub_agent()
 
-        
+#         if self.counter%self.steps_in_every_action == 0:
+#             print(50*"@")
+#         print("counter: ", self.counter, "   current action: ", self.action)
+#         self.counter = self.counter + 1 
+
+            
+        return tmp
         
     def begin_episode_for_begin_of_sub_agent(self):
         
@@ -443,7 +450,7 @@ class HierarchyAgent(object):
             self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
             self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
             self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
-
+#             print("&"*30, "pushed sub: ", self.last_states2[3], self.last_states2[2], self.last_states2[1], "  to subagent: ", self.action)
 
         self.is_sub_agent = True
         self.accumulated_reward = 0 
@@ -514,10 +521,17 @@ class HierarchyAgent(object):
 
         #if sub agent just finished. we need to update all transitions
         if self.is_sub_agent == False:
-            return self._step_for_begin_of_sub_agent(reward, observation)
+            tmp = self._step_for_begin_of_sub_agent(reward, observation)
         else:
-            return self._step_for_middle_of_sub_agent(reward, observation)
-                
+            tmp = self._step_for_middle_of_sub_agent(reward, observation)
+            
+        
+#         if self.counter%self.steps_in_every_action == 0:
+#             print(50*"@")
+#         print("counter: ", self.counter, "   current action: ", self.action)
+#         self.counter = self.counter + 1
+
+        return tmp
    
     def _step_for_begin_of_sub_agent(self, reward, observation):
         '''
@@ -540,6 +554,7 @@ class HierarchyAgent(object):
             #regular agent update every step
             # we enter reward and *not* self.accumulated_reward
             self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)    
+#             print("&"*30, "pushed sub: ", self.counter - 1, "  to subagent: ", self.action)
 
             #train super agent 
             if self.start_heirarchy_learning:
@@ -559,12 +574,14 @@ class HierarchyAgent(object):
             # because he needs the next state
             #if not eval mode 
             self._store_transition(self._observation, self.action, 0, -1, False)    
+#             print("&"*30, "pushed sub: ", self.counter, "  to subagent: ", self.action)
 
             if self.start_heirarchy_learning:
                 self._store_hirarchy_transition(np.squeeze( self.last_states[-1] ), 0, 0, False)
                 self._store_hirarchy_transition(np.squeeze( self.last_states[-2] ), 0, 0, False)
                 self._store_hirarchy_transition(np.squeeze( self.last_states[-3] ), 0, 0, False)
                 self._store_hirarchy_transition(np.squeeze( self.last_states[-4] ), self.action, self.accumulated_reward, False)
+#                 print("&"*30, "pushed super: ", self.last_states2[-1], self.last_states2[-2], self.last_states2[-3], self.last_states2[-4], "  action: ", self.action)
 
         #change sub agent
         if self.start_heirarchy_learning == True:
@@ -585,6 +602,7 @@ class HierarchyAgent(object):
             self._store_transition(np.squeeze( self.last_states[3] ), self.action, 0, -1, False) 
             self._store_transition(np.squeeze( self.last_states[2] ), self.action, 0, -1, False) 
             self._store_transition(np.squeeze( self.last_states[1] ), self.action, 0, -1, False) 
+#             print("&"*30, "pushed sub: ", self.last_states2[3], self.last_states2[2], self.last_states2[1], "  to subagent: ", self.action)
 
 
         #update agent number for display
@@ -617,7 +635,8 @@ class HierarchyAgent(object):
             #regular agent update every step
             # we enter reward and *not* self.accumulated_reward
             self._store_transition(self._last_observation, self.action, self.simple_action, reward, False)     
-                
+#             print("&"*30, "pushed sub: ", self.counter - 1, "  to subagent: ", self.action)
+
             #train sub agents 
             self.agent_list[self.action]._train_step()  
             
@@ -651,27 +670,32 @@ class HierarchyAgent(object):
         if not self.eval_mode:
 
             self._store_transition(self._observation, self.action, self.simple_action, reward, True) 
+#             print("&"*30, "pushed sub: ", self.counter - 1, "  to subagent: ", self.action)
 
             #if sub agent just finished. we need to update all transitions
             if self.is_sub_agent == False:
                 zero_observation = np.zeros( self.observation_shape )
 
                 self._store_transition(np.squeeze(zero_observation), self.action, 0, -1, True)    
-                
+#                 print("&"*30, "pushed sub: ", 0, "  to subagent: ", self.action)
+
+                #if we are in the end of episode, we didnt push any observation
+                # thats why the last 4 obesrvations are too old 
+                # we need to pick newer observations
                 #update super aget transition 
                 if self.start_heirarchy_learning:                                                                      
-                    self._store_hirarchy_transition(np.squeeze( self.last_states[-1] ), 0, 0, False)
                     self._store_hirarchy_transition(np.squeeze( self.last_states[-2] ), 0, 0, False)
                     self._store_hirarchy_transition(np.squeeze( self.last_states[-3] ), 0, 0, False)
-                    self._store_hirarchy_transition(np.squeeze( self.last_states[-4] ), self.action, self.accumulated_reward, False)
-                
+                    self._store_hirarchy_transition(np.squeeze( self.last_states[-4] ), 0, 0, False)
+                    self._store_hirarchy_transition(np.squeeze( self.last_states[-5] ), self.action, self.accumulated_reward, False)
+#                     print("&"*30, "END pushed super: ", self.last_states2[-2], self.last_states2[-3], self.last_states2[-4], self.last_states2[-5], "  action: ", self.action)
+
                 
                 #regular agent update every step
                 # we enter reward and *not* self.accumulated_reward
 
                 
             # we are in the middel of some sub agent, we are waiting for final resaults
-                
 
         
 
@@ -741,6 +765,9 @@ class HierarchyAgent(object):
         self.last_states.pop()
         self.last_states.insert(0, observation)
         
+#         self.last_states2.pop()
+#         self.last_states2.insert(0, self.counter)
+
         
         # Set current observation. We do the reshaping to handle environments
         # without frame stacking.
@@ -805,6 +832,18 @@ class HierarchyAgent(object):
             for i in range(self.stack_size - 1):
                 self.last_states.insert(0, zero_observation)
  
+#         if len(self.last_states2) == 0:
+#             for i in range(self._size_of_state_history):
+#                 self.last_states2.insert(0,0)
+#         else:
+#             for i in range(self.stack_size - 1):
+#                 self.last_states2.pop(0)
+#             for i in range(self.stack_size - 1):
+#                 self.last_states2.insert(0, 0)
+
+
+
+
         self.state.fill(0)
 
     def bundle_and_checkpoint(self, checkpoint_dir, iteration_number):
